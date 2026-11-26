@@ -157,7 +157,69 @@ const ds=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()),pd=s=>{
 const add=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x},mon=d=>add(d,-((d.getDay()+6)%7)),today=()=>ds(new Date());
 const MES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'],DS=['L','M','X','J','V','S','D'];
 const fd=s=>pd(s).toLocaleDateString('es-AR',{weekday:'short',day:'numeric',month:'short'});
-const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){toast('No se pudo guardar en este dispositivo')}};
+const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){toast('No se pudo guardar en este dispositivo')}schedulePushSync();};
+
+// NOTIFICACIONES PUSH: sincronización con el servicio externo
+const PUSH_INSTALL_KEY='myday.push.installation';
+function getPushInstallationId(){
+ let id=localStorage.getItem(PUSH_INSTALL_KEY);
+ if(!id){id=crypto.randomUUID();localStorage.setItem(PUSH_INSTALL_KEY,id)}
+ return id;
+}
+function urlBase64ToUint8Array(value){
+ const pad='='.repeat((4-value.length%4)%4),base=(value+pad).replace(/-/g,'+').replace(/_/g,'/');
+ return Uint8Array.from(atob(base),c=>c.charCodeAt(0));
+}
+async function pushRequest(path,data){
+ const cfg=window.MYDAY_PUSH_CONFIG||{};
+ const response=await fetch(cfg.workerUrl.replace(/\/$/,'')+path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+ if(!response.ok)throw new Error('Push service HTTP '+response.status);
+ return response.json().catch(()=>({ok:true}));
+}
+function buildPushJobs(){
+ const jobs=[],now=Date.now(),limit=add(new Date(),60),addJob=(id,title,body,date)=>{
+  const at=date instanceof Date?date.getTime():Number(date);
+  if(Number.isFinite(at)&&at>now&&at<now+61*864e5)jobs.push({id,title:String(title||'MyDay').slice(0,120),body:String(body||'').slice(0,240),scheduledAt:at});
+ };
+ for(let i=0;i<=60;i++){
+  const day=add(new Date(),i),date=ds(day);
+  S.rm.forEach(r=>{
+   if(r.on==='0'||(r.rec==='No'&&r.done)||!occ(r,date))return;
+   addJob('r'+r.id+date,r.title,r.desc||'Tenés un recordatorio pendiente',new Date(date+'T'+r.time));
+  });
+  S.ev.forEach(e=>{
+   if(!e.rm||!occ(e,date))return;
+   const start=new Date(date+'T'+e.start);
+   addJob('e'+e.id+date,e.title,'Empieza a las '+e.start,new Date(start.getTime()-Number(e.rm)*60000));
+  });
+  const routine=ROUT[day.getDay()];
+  if(routine&&!S.at[date])addJob('g'+date,'Hoy toca gym',routine.n+': '+routine.t,new Date(date+'T18:00'));
+ }
+ const dateInArgentina=ts=>new Intl.DateTimeFormat('en-CA',{timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(ts));
+ S.mt.forEach(m=>{
+  if(!S.tg[m.team])return;
+  const date=dateInArgentina(m.ts),name=TM[m.team][0].split(' ')[0].toUpperCase();
+  addJob('m'+m.id+'d','¡HOY JUEGA '+name+'!',m.home+' vs '+m.away,new Date(date+'T08:00'));
+  if(S.pre&&!m.nt)addJob('m'+m.id+'p','Juega '+name+' en '+S.pre+' min',m.home+' vs '+m.away,m.ts-S.pre*60000);
+ });
+ const seen=new Set();
+ return jobs.filter(j=>{if(seen.has(j.id))return false;seen.add(j.id);return true}).slice(0,500);
+}
+async function syncPushJobs(){
+ const cfg=window.MYDAY_PUSH_CONFIG||{};
+ if(!cfg.workerUrl||!cfg.publicKey||typeof Notification==='undefined'||Notification.permission!=='granted')return;
+ const reg=await navigator.serviceWorker.ready,sub=await reg.pushManager.getSubscription();
+ if(!sub){window.__mydayPushReady=false;return}
+ window.__mydayPushReady=true;
+ await pushRequest('/sync',{installationId:getPushInstallationId(),jobs:buildPushJobs()});
+}
+let pushSyncTimer;
+function schedulePushSync(){
+ if(!window.MYDAY_PUSH_CONFIG?.workerUrl||typeof Notification==='undefined'||Notification.permission!=='granted')return;
+ clearTimeout(pushSyncTimer);
+ pushSyncTimer=setTimeout(()=>syncPushJobs().catch(e=>console.warn('MyDay push sync:',e)),900);
+}
+
 const cat=n=>S.cats.find(c=>c.n==n)||{i:'•',c:'#8a8fa5'};
 const chip=n=>{const c=cat(n);return `<span class=ch style="background:${c.c}26;color:${c.c}">${c.i} ${esc(n)}</span>`};
 const RC=['No','Diaria','Semanal','Mensual'],RM=[['','Sin aviso'],['10','10 min antes'],['30','30 min antes'],['60','1 hora antes'],['1440','1 día antes']],PR=['Baja','Media','Alta'],PRK={Alta:0,Media:1,Baja:2};
@@ -279,9 +341,28 @@ function nx(r){for(let i=0;i<=62;i++){const d=ds(add(new Date(),i));if(occ(r,d))
 function editRm(id){const e=S.rm.find(x=>x.id==id)||{date:today(),time:'09:00',rec:'No',on:'1',ev:''};
  form(id?'Editar recordatorio':'Nuevo recordatorio',[{n:'title',l:'Título',v:e.title,r:1},{n:'desc',l:'Descripción',t:'area',v:e.desc},{n:'date',l:'Fecha',t:'date',v:e.date,r:1},{n:'time',l:'Hora',t:'time',v:e.time,r:1},{n:'rec',l:'Repetir',t:'sel',o:RC,v:e.rec},{n:'on',l:'Notificación',t:'sel',o:[['1','Activada'],['0','Desactivada']],v:e.on},{n:'ev',l:'Asociado a evento',t:'sel',o:[['','Ninguno'],...S.ev.map(x=>[x.id,x.title+' ('+x.date+')'])],v:e.ev}],v=>{up(S.rm,id,v)},id&&rm(S.rm,id))}
 function rtgl(id){const r=S.rm.find(x=>x.id==id);if(r.rec=='No')r.done=!r.done;else r.dd=r.dd==today()?'':today();save();render()}
-async function perm(){if(typeof Notification=='undefined')return toast('Este navegador no permite notificaciones. Instalá MyDay en la pantalla de inicio (iOS 16.4 o superior).');const p=await Notification.requestPermission();toast(p=='granted'?'Notificaciones activadas':'Notificaciones desactivadas. Los avisos seguirán apareciendo dentro de la app.');render()}
-function rem(){const l=S.rm.map(r=>({r,t:nx(r)})).sort((a,b)=>(a.t||1e15)-(b.t||1e15)),np=typeof Notification=='undefined'?'no disponibles':Notification.permission=='granted'?'activadas':'sin permiso';
- return `<div class="row sp"><button class="b g s" onclick="go('home')">‹ Inicio</button></div><h1>Recordatorios</h1><p class=sub>Notificaciones del sistema: ${np}. Suenan solo con la app abierta; si no, los avisos quedan acá.</p>
+async function perm(){
+ if(typeof Notification==='undefined'||!('serviceWorker'in navigator)||!('PushManager'in window))return toast('Este navegador no admite notificaciones push. En iPhone, instalá MyDay desde Safari en la pantalla de inicio (iOS 16.4 o superior).');
+ const cfg=window.MYDAY_PUSH_CONFIG||{};
+ if(!cfg.workerUrl||!cfg.publicKey)return toast('Falta configurar el servicio push. Revisá README-NOTIFICATIONS.md en el repositorio.');
+ const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent);
+ const isStandalone=window.navigator.standalone===true||window.matchMedia('(display-mode: standalone)').matches;
+ if(isIOS&&!isStandalone)return toast('Primero agregá MyDay a la pantalla de inicio y abrila desde su ícono.');
+ try{
+  const reg=await navigator.serviceWorker.register('./sw.js');
+  const permission=await Notification.requestPermission();
+  if(permission!=='granted'){toast('No se concedió permiso para las notificaciones.');render();return}
+  let sub=await reg.pushManager.getSubscription();
+  if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(cfg.publicKey)});
+  await pushRequest('/subscribe',{installationId:getPushInstallationId(),subscription:sub.toJSON()});
+  window.__mydayPushReady=true;
+  await syncPushJobs();
+  toast('¡Notificaciones activadas! MyDay podrá avisarte aunque esté cerrada.');
+ }catch(err){console.error('MyDay push setup:',err);toast('No se pudieron activar las notificaciones. Revisá la configuración del servicio push.')}
+ render();
+}
+function rem(){const l=S.rm.map(r=>({r,t:nx(r)})).sort((a,b)=>(a.t||1e15)-(b.t||1e15)),np=typeof Notification=='undefined'?'no disponibles':Notification.permission=='granted'?'permiso concedido':'sin permiso';
+ return `<div class="row sp"><button class="b g s" onclick="go('home')">‹ Inicio</button></div><h1>Recordatorios</h1><p class=sub>Notificaciones del sistema: ${np}. Con el servicio push configurado, los avisos pueden llegar aunque cierres MyDay.</p>
  <div class=row style="margin-bottom:12px"><button class=b onclick="editRm()">+ Nuevo</button><button class="b g" onclick="perm()">Activar notificaciones</button></div>
  <div class=card>${l.map(({r,t})=>`<div class="it ${rdone(r)?'done':''}"><button class="ck ${rdone(r)?'on':''}" onclick="rtgl('${r.id}')">${rdone(r)?'✓':''}</button><div onclick="editRm('${r.id}')"><b>${r.on=='0'?'🔕 ':''}${esc(r.title)}</b><small>${t?t.toLocaleString('es-AR',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'Pasado'}${r.rec!='No'?' · '+r.rec:''}</small></div></div>`).join('')||empty('No hay recordatorios.')}</div>`}
 // FÚTBOL
@@ -339,7 +420,7 @@ function prof(){const p=S.p;return `<h1>Perfil</h1><div class=card><div class=ro
 // ARRANQUE
 const go=t=>{T=t;scrollTo(0,0);render()};
 function render(){$('#mn').innerHTML={home,cal,tk,gym,prof,foot,rem}[T]();const on=T=='foot'||T=='rem'?'home':T;$('#nv').innerHTML=[['home',I.home,'Inicio'],['cal',I.cal,'Calendario'],['tk',I.tk,'Tareas'],['gym',I.gym,'Gym'],['prof',I.prof,'Perfil']].map(([k,i,n])=>`<button class="${on==k?'on':''}" onclick="go('${k}')"><span>${i}</span>${n}</button>`).join('')}
-function tick(){const now=Date.now(),t=today(),fire=(id,a,b)=>{if(S.fired[id])return;S.fired[id]=1;save();toast(a+(b?' — '+b:''));try{if(Notification.permission=='granted')new Notification(a,{body:b})}catch(e){}};
+function tick(){const now=Date.now(),t=today(),fire=(id,a,b)=>{if(S.fired[id])return;S.fired[id]=1;save();toast(a+(b?' — '+b:''));try{if(Notification.permission==='granted'&&!window.__mydayPushReady)navigator.serviceWorker.ready.then(reg=>reg.showNotification(a,{body:b||'',icon:'./icon.svg',tag:id})).catch(()=>{})}catch(e){}};
  S.rm.forEach(r=>{if(r.on!='0'&&!rdone(r)&&occ(r,t)&&new Date(t+'T'+r.time)<=now)fire('r'+r.id+t,r.title,r.desc)});
  {const R=ROUT[new Date().getDay()];if(R&&!S.at[t]&&new Date().getHours()>=18)fire('g'+t,'Hoy toca gym',R.n+': '+R.t)}
  S.ev.forEach(e=>{if(e.rm&&occ(e,t)){const s=new Date(t+'T'+e.start);if(now>=s-e.rm*6e4&&now<s)fire('e'+e.id+t,e.title,'Empieza a las '+e.start)}});
@@ -354,6 +435,6 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#md').classList.
 $('#md').addEventListener('click',e=>{if(e.target.id==='md'){$('#md').classList.remove('on');$('#md').innerHTML=''}});
 window.addEventListener('error',e=>{try{toast('Se produjo un error inesperado. Tus datos guardados se mantienen.')}catch(_){}});
 window.addEventListener('unhandledrejection',e=>{try{toast('No se pudo completar una operación. Revisá tu conexión e intentá nuevamente.')}catch(_){}});
-if('serviceWorker' in navigator && location.protocol.startsWith('http')){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));}
+if('serviceWorker' in navigator && location.protocol.startsWith('http')){window.addEventListener('load',async()=>{try{const reg=await navigator.serviceWorker.register('./sw.js');await navigator.serviceWorker.ready;const sub=await reg.pushManager.getSubscription();if(sub&&Notification.permission==='granted'){window.__mydayPushReady=true;syncPushJobs().catch(()=>{})}}catch(e){console.warn('MyDay service worker:',e)}});}
 
 </script></body></html>
