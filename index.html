@@ -221,6 +221,11 @@ button:active,.b:active,.q:active{transform:translateY(1px) scale(.985)}
 @media(max-width:759px){main{padding:18px 15px calc(112px + env(safe-area-inset-bottom,0px))}.hero{padding:23px 19px 19px}.hero h1{font-size:29px}#nv{padding-left:5px;padding-right:5px;background:color-mix(in srgb,var(--c) 92%,transparent);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}#nv button.on{border-radius:13px}}
 @media(prefers-reduced-motion:reduce){.card,.it,button,.b,.q,.bar i{transition:none!important}}
 
+/* MyDay Intelligence — sección dedicada */
+.intel-page{max-width:900px;margin:0 auto}.intel-page-head{display:flex;align-items:center;justify-content:space-between;gap:18px;margin:4px 0 22px}.intel-page-head h1{font-size:clamp(25px,4vw,34px);letter-spacing:-1.1px;margin:5px 0}.intel-page-head p{font-size:12px;color:var(--m);margin:0;max-width:540px;line-height:1.55}.intel-page-mark{display:grid;place-items:center;flex:0 0 62px;height:62px;border:1px solid color-mix(in srgb,var(--a) 28%,var(--l));border-radius:20px;background:var(--as);color:var(--a);font-size:31px;box-shadow:0 12px 30px -20px var(--a)}
+.intel-chat-card{min-height:500px;display:flex;flex-direction:column}.intel-chat-card .intel-chat-messages{flex:1;min-height:245px;max-height:490px}.intel-chat-card .intel-chat-intro{padding-top:20px;padding-bottom:9px}.intel-chat-card .intel-chat-suggestions{padding-bottom:16px}
+.intel-capabilities{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px}.intel-capabilities>div{display:flex;flex-direction:column;gap:5px;padding:13px;border:1px solid var(--l);border-radius:14px;background:var(--c)}.intel-capabilities b{font-size:11px}.intel-capabilities span{font-size:9px;color:var(--m);line-height:1.4}
+@media(max-width:650px){.intel-page-head{margin-top:0}.intel-page-mark{flex-basis:49px;height:49px;border-radius:15px}.intel-chat-card{min-height:440px}.intel-chat-card .intel-chat-messages{max-height:390px}.intel-capabilities{grid-template-columns:repeat(2,minmax(0,1fr))}}
 /* MyDay Intelligence — chatbot */
 .intel-chat-intro{padding:17px 18px 5px}.intel-chat-intro>b{font-size:16px;letter-spacing:-.3px}.intel-chat-intro>p{font-size:11px;color:var(--m);margin:4px 0 0}
 .intel-chat-suggestions{display:flex;gap:7px;flex-wrap:wrap;padding:10px 18px 13px}.intel-chat-suggestions button{border:1px solid var(--l);background:var(--c);color:var(--t);border-radius:20px;padding:7px 10px;font:650 10px inherit;cursor:pointer}.intel-chat-suggestions button:active{background:var(--as);border-color:var(--a)}
@@ -549,7 +554,7 @@ const ROUT={
 const WD=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'],mins=t=>+t.slice(0,2)*60+ +t.slice(3,5);
 const hi=()=>{const h=new Date().getHours();return h<6||h>=20?'Buenas noches':h<13?'Buen día':'Buenas tardes'};
 const ic=p=>`<svg viewBox="0 0 24 24" width=24 height=24 fill=none stroke=currentColor stroke-width=1.8 stroke-linecap=round stroke-linejoin=round>${p}</svg>`;
-const I={home:ic('<path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>'),cal:ic('<rect x=3 y=4 width=18 height=17 rx=3 /><path d="M8 2v4M16 2v4M3 10h18"/>'),tk:ic('<circle cx=12 cy=12 r=9 /><path d="M8 12.5l2.7 2.7L16 9.5"/>'),gym:ic('<path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"/>'),prof:ic('<circle cx=12 cy=8 r=4 /><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>')};
+const I={home:ic('<path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>'),cal:ic('<rect x=3 y=4 width=18 height=17 rx=3 /><path d="M8 2v4M16 2v4M3 10h18"/>'),tk:ic('<circle cx=12 cy=12 r=9 /><path d="M8 12.5l2.7 2.7L16 9.5"/>'),gym:ic('<path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"/>'),intel:ic('<path d="M12 3l1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2L12 3z"/><path d="M19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8L19 16z"/>'),prof:ic('<circle cx=12 cy=8 r=4 /><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>')};
 // Prioridad inteligente de tareas: importancia + cercanía del vencimiento
 const sc=x=>{const w={Alta:30,Media:20,Baja:10}[x.pr]||10;if(!x.due)return w;const d=Math.round((pd(x.due)-pd(today()))/864e5);return w+(d<0?50+Math.min(-d,10):d==0?40:d<=2?25:d<=7?10:0)};
 // Detecta eventos que se superponen (sin hora de fin se asume 1 hora)
@@ -716,55 +721,71 @@ function intelDateLabel(d){return d.toLocaleDateString('es-AR',{weekday:'long',d
 function intelClock(v){return v?String(v).slice(0,5):''}
 function intelMatchDate(m){return new Intl.DateTimeFormat('en-CA',{timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(m.ts))}
 function intelAnswer(question){
- const q=String(question||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
- const now=new Date(),base=pd(today());let from=new Date(base),to=new Date(base),range=false,label='hoy';
+ const raw=String(question||'').trim(),q=raw.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+ const now=new Date(),base=pd(today()),days=['domingo','lunes','martes','miercoles','jueves','viernes','sabado'];
+ let from=new Date(base),to=new Date(base),range=false,label='hoy';
  if(/\bmanana\b/.test(q)){from=add(base,1);to=new Date(from);label='mañana'}
+ else if(/pasado manana/.test(q)){from=add(base,2);to=new Date(from);label='pasado mañana'}
  else{
-  const days=['domingo','lunes','martes','miercoles','jueves','viernes','sabado'];
   const idx=days.findIndex(x=>new RegExp('\\b'+x+'\\b').test(q));
   if(idx>=0){let delta=(idx-base.getDay()+7)%7;if(delta===0&&/proximo|que viene/.test(q))delta=7;from=add(base,delta);to=new Date(from);label=days[idx]}
   else if(/esta semana|la semana/.test(q)){from=base;to=add(base,6);range=true;label='esta semana'}
   else if(/proximos 7|siguiente semana/.test(q)){from=base;to=add(base,7);range=true;label='los próximos 7 días'}
  }
- const fromKey=ds(from),toKey=ds(to),events=[];
+ const fk=ds(from),tk=ds(to),all=[];
  for(let d=new Date(from);d<=to;d=add(d,1)){
   const key=ds(d);
-  evOn(key).forEach(e=>events.push({type:'event',date:key,time:e.start||'99:99',end:e.end||'',title:e.title,desc:e.desc||'',category:e.cat||''}));
+  S.ev.filter(e=>occ(e,key)).forEach(e=>all.push({type:'event',date:key,time:e.start||'',end:e.end||'',title:e.title||'Evento',desc:e.desc||'',cat:e.cat||''}));
+  S.rm.filter(r=>r.on!=='0'&&occ(r,key)&&!(r.rec==='No'?!!r.done:r.dd===key)).forEach(r=>all.push({type:'reminder',date:key,time:r.time||'',end:'',title:r.title||'Recordatorio',desc:r.desc||''}));
  }
- S.rm.filter(r=>r.on!=='0').forEach(r=>{
-  for(let d=new Date(from);d<=to;d=add(d,1)){const key=ds(d),done=r.rec==='No'?!!r.done:r.dd===key;if(occ(r,key)&&!done){events.push({type:'reminder',date:key,time:r.time||'99:99',end:'',title:r.title,desc:r.desc||''});break}}
+ S.mt.filter(m=>['boca','atu'].includes(m.team)&&Number.isFinite(+m.ts)&&m.ts>=now.getTime()-7200000).forEach(m=>{
+  const key=intelMatchDate(m);if(key>=fk&&key<=tk)all.push({type:'match',date:key,time:m.nt?'':new Intl.DateTimeFormat('en-GB',{timeZone:TZ,hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(m.ts)),title:TM[m.team][0]+' · partido',desc:(m.home||'')+' vs '+(m.away||''),team:m.team,unknown:!!m.nt,ts:m.ts});
  });
- S.mt.filter(m=>['boca','atu'].includes(m.team)&&m.ts>=now.getTime()-72e5).forEach(m=>{
-  const key=intelMatchDate(m);if(key>=fromKey&&key<=toKey)events.push({type:'match',date:key,time:new Intl.DateTimeFormat('en-GB',{timeZone:TZ,hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(m.ts)),end:'',title:TM[m.team][0]+' juega',desc:(m.home||'')+' vs '+(m.away||''),team:m.team,ts:m.ts,unknown:!!m.nt});
- });
- if(!range&&fromKey===today()){
-  const routine=ROUT[from.getDay()];
-  if(routine)events.push({type:'gym',date:fromKey,time:'99:99',end:'',title:'Gym · '+routine.n,desc:routine.t+' (la rutina no tiene horario cargado)'});
+ all.sort((a,b)=>a.date.localeCompare(b.date)||(a.time||'99:99').localeCompare(b.time||'99:99'));
+ const gymAsked=/gym|entrenamiento|rutina|entreno/.test(q),footballAsked=/boca|atletico|decano|partido|futbol/.test(q),remAsked=/recordatorio|pendiente|vencid|aviso/.test(q);
+ const onlyTeam=/boca/.test(q)?'boca':/atletico|decano/.test(q)?'atu':'';
+ let selected=all;
+ if(footballAsked)selected=all.filter(e=>e.type==='match'&&(!onlyTeam||e.team===onlyTeam));
+ else if(remAsked)selected=all.filter(e=>e.type==='reminder');
+ else if(/evento|agenda|horario|compromiso/.test(q)&&!/que tengo|mi dia|hoy|manana|semana|lunes|martes|miercoles|jueves|viernes|sabado|domingo/.test(q))selected=all.filter(e=>e.type==='event');
+ const fmtDate=e=>range?intelDateLabel(pd(e.date))+' · ':'';
+ const fmtTime=e=>e.type==='match'&&e.unknown?'Horario a confirmar':e.time?(e.end?e.time+' a '+e.end+' hs':e.time+' hs'):'Horario no especificado';
+ const row=e=>'<div class="intel-chat-event"><span>'+(e.type==='match'?'⚽':e.type==='reminder'?'◷':'▦')+'</span><div><b>'+esc(fmtDate(e)+e.title)+'</b><small>'+esc(fmtTime(e)+(e.desc?' · '+e.desc:''))+'</small></div></div>';
+ const agenda=(list,heading)=>'<p>'+heading+'</p><div class="intel-chat-agenda">'+list.map(row).join('')+'</div>';
+ if(/hola|buen dia|buenas tardes|buenas noches|quien sos|que podes hacer|ayuda/.test(q)&&!(/hoy|manana|agenda|partido|gym|recordatorio/.test(q))){
+  return '<p>¡Hola! Soy MyDay Intelligence, tu asistente personal.</p><p>Puedo consultar tu agenda por día, encontrar el próximo evento, revisar recordatorios, ver tu rutina de Gym y buscar los próximos partidos de Boca y Atlético.</p><p>Probá preguntarme: <b>«¿Qué es lo próximo que tengo?»</b> o <b>«¿Cuándo juega Boca?»</b>.</p>';
  }
- events.sort((a,b)=>a.date.localeCompare(b.date)||a.time.localeCompare(b.time));
- const datePrefix=e=>range?intelDateLabel(pd(e.date))+' · ':'';
- const lines=events.map(e=>{
-  const time=e.unknown?'Horario a confirmar':e.time==='99:99'?'Horario no especificado':e.end?e.time+' hs a '+e.end+' hs':e.time+' hs';
-  const extra=e.type==='match'?' · '+e.desc:e.desc?' · '+e.desc:'';
-  const icon=e.type==='match'?'⚽':e.type==='gym'?'🏋️':e.type==='reminder'?'◷':'•';
-  return '<div class="intel-chat-event"><span>'+icon+'</span><div><b>'+esc(datePrefix(e)+e.title)+'</b><small>'+esc(time+extra)+'</small></div></div>';
- });
- let answer='';
- if(events.length){
-  const count=events.length,heading=range?'Esto es lo que tenés '+label+':':'Esto es lo que tenés '+label+':';
-  answer='<p>'+heading+'</p><div class="intel-chat-agenda">'+lines.join('')+'</div>';
-  if(!range&&events.some(e=>e.type==='gym'&&e.time==='99:99'))answer+='<p class="intel-chat-note">La rutina de Gym está definida para ese día, pero no tengo un horario de inicio y fin guardado. Si la cargás como evento en Calendario, podré indicarte la franja exacta.</p>';
- }else answer=range?'No encuentro compromisos cargados para '+label+'. ¡Por ahora tu agenda está despejada!':'No encuentro eventos, recordatorios ni partidos cargados para '+label+'. Si esperabas ver algo, revisá que esté guardado en Calendario o Fútbol.';
- if(/gym|entrenamiento|rutina/.test(q)&&!events.some(e=>e.type==='gym')){
-  const routine=ROUT[from.getDay()];
-  answer+='<p>'+(routine?'Según tu rutina, ese día corresponde '+routine.n+': '+routine.t+'.':'Según tu rutina, ese día es de descanso.')+'</p>';
+ if(/proximo evento|que sigue|siguiente compromiso|cuando es mi proximo/.test(q)){
+  const next=all.filter(e=>e.date>today()||(e.date===today()&&(!e.time||e.time>=pad(now.getHours())+':'+pad(now.getMinutes()))))[0];
+  return next?'<p>Tu próximo compromiso es:</p><div class="intel-chat-agenda">'+row(next)+'</div><p>Después de ese horario, puedo ayudarte a revisar el resto de tu agenda.</p>':'No encuentro próximos compromisos cargados. Tu agenda está libre por ahora.';
  }
- if(/boca|atletico|decano|partido|futbol/.test(q)){
-  const ms=S.mt.filter(m=>['boca','atu'].includes(m.team)&&m.ts>=now.getTime()-72e5).sort((a,b)=>a.ts-b.ts);
-  if(ms.length&&!events.some(e=>e.type==='match'))answer+='<p>El próximo partido cargado es '+esc(TM[ms[0].team][0])+' · '+esc(ms[0].home+' vs '+ms[0].away)+'.</p>';
-  else if(!ms.length)answer+='<p>No hay próximos partidos de Boca o Atlético cargados en este momento.</p>';
+ if(footballAsked){
+  const matches=selected.filter(e=>e.type==='match');
+  if(matches.length)return agenda(matches,onlyTeam?'Estos son los próximos partidos de '+(onlyTeam==='boca'?'Boca Juniors':'Atlético Tucumán')+':':'Estos son los próximos partidos de Boca y Atlético:');
+  const labelTeam=onlyTeam?(onlyTeam==='boca'?'Boca Juniors':'Atlético Tucumán'):'Boca o Atlético';
+  return 'No encuentro partidos próximos de '+labelTeam+' en los datos guardados. Entrá en Fútbol y actualizá el fixture para consultar la información más reciente.';
  }
- return answer;
+ if(remAsked){
+  const pending=selected.filter(e=>e.type==='reminder');
+  if(pending.length)return agenda(pending,'Encontré '+pending.length+' recordatorio'+(pending.length===1?'':'s')+' pendiente'+(pending.length===1?'':'s')+' en '+label+':');
+  return 'No encuentro recordatorios pendientes para '+label+'. Si esperabas alguno, revisá la sección Recordatorios y comprobá que esté activo.';
+ }
+ if(gymAsked){
+  const routine=ROUT[from.getDay()],weekLogs=S.lg.filter(l=>l.date>=ds(mon(now))&&l.date<=today()).length;
+  if(!range&&fk===today()){
+   if(routine)return '<p>Según tu rutina, hoy corresponde <b>'+esc(routine.n)+'</b>.</p><p>'+esc(routine.t)+'.</p><p>Esta semana llevás '+gc(mon(now))+' de 4 sesiones registradas. La rutina no tiene un horario asignado; si querés que te indique una franja horaria, cargá Gym como evento en Calendario.</p>';
+   return '<p>Hoy no tenés una sesión asignada en tu rutina habitual.</p><p>Esta semana llevás '+gc(mon(now))+' de 4 sesiones registradas.</p>';
+  }
+  return '<p>Esta semana llevás <b>'+gc(mon(now))+' de 4 sesiones</b> registradas ('+weekLogs+' registros de entrenamiento).</p><p>Tu rutina semanal está organizada en los días que figuran en la sección Gym.</p>';
+ }
+ if(selected.length){
+  const count=selected.length,head=range?'Tu agenda para '+label+' tiene '+count+' elemento'+(count===1?'':'s')+'.':'Para '+label+' encontré '+count+' compromiso'+(count===1?'':'s')+' cargado'+(count===1?'':'s')+'.';
+  const future=selected.filter(e=>e.date>today()||(e.date===today()&&e.time&&e.time>=pad(now.getHours())+':'+pad(now.getMinutes())));
+  return agenda(selected,head)+(future.length?'<p>Te quedan '+future.length+' por delante según la hora actual.</p>':'<p>Según los horarios guardados, no quedan más compromisos por delante en este período.</p>');
+ }
+ if(range)return 'No hay eventos ni recordatorios pendientes cargados para '+label+'. Podés aprovechar para organizar la semana desde Calendario.';
+ if(/hoy|manana|pasado manana|lunes|martes|miercoles|jueves|viernes|sabado|domingo|agenda|mi dia/.test(q))return 'No encuentro compromisos cargados para '+label+'. No quiero inventarte actividades: revisá Calendario, Recordatorios y Fútbol si esperabas ver algo.';
+ return 'Puedo ayudarte con tu agenda, próximos compromisos, recordatorios, Gym y partidos. Probá con una pregunta más concreta, por ejemplo: «¿Qué tengo mañana?» o «¿Qué recordatorios tengo pendientes?».';
 }
 function intelPaint(){
  const box=document.getElementById('intel-chat-messages');if(!box)return;
@@ -779,36 +800,7 @@ function intelAsk(value){
 }
 function intelQuick(q){intelAsk(q)}
 function intelligence(){
- const now=new Date(),t=today(),cut=now.getHours()*60+now.getMinutes();
- const events=Array.isArray(S.ev)?S.ev:[],reminders=Array.isArray(S.rm)?S.rm:[],logs=Array.isArray(S.lg)?S.lg:[];
- const todayList=evOn(t).filter(e=>!e.start||mins(e.start)>=cut);
- const upcoming=[];
- for(let i=1;i<=7;i++){
-  const day=ds(add(now,i));
-  evOn(day).forEach(e=>upcoming.push({e,day}));
- }
- upcoming.sort((a,b)=>a.day.localeCompare(b.day)||(a.e.start||'').localeCompare(b.e.start||''));
- const overdue=reminders.filter(r=>{
-  if(r.on==='0'||rdone(r)||r.rec!=='No'||!r.date)return false;
-  return r.date<t||(r.date===t&&mins(r.time)<cut);
- });
- const pending=reminders.filter(r=>r.on!=='0'&&!rdone(r)).map(r=>({r,at:nx(r)})).filter(x=>x.at).sort((a,b)=>a.at-b.at);
- const weekStart=ds(mon(now)),weekCount=logs.filter(l=>l.date>=weekStart&&l.date<=t).length;
- const gymCount=gc(mon(now));
- const matches=['boca','atu'].map(k=>({k,m:nextM(k)})).filter(x=>x.m).sort((a,b)=>a.m.ts-b.m.ts);
- let headline='Tenés el día bastante despejado.',detail='Podés aprovechar para adelantar algo o tomarte un respiro.';
- if(overdue.length){headline='Hay '+overdue.length+' recordatorio'+(overdue.length===1?'':'s')+' que revisar.';detail='Revisá lo pendiente para que no se te acumule.'}
- else if(todayList.length){headline='Tu día ya tiene '+todayList.length+' compromiso'+(todayList.length===1?'':'s')+'.';detail=todayList[0].start?'Tu próximo evento es '+esc(todayList[0].title)+' a las '+esc(todayList[0].start)+'.':'Tu próximo compromiso es '+esc(todayList[0].title)+'.'}
- else if(pending.length){headline='Tenés recordatorios en agenda.';detail='El próximo es '+esc(pending[0].r.title)+'.'}
- else if(upcoming.length){headline='Tu agenda empieza a moverse.';detail='Lo próximo es '+esc(upcoming[0].e.title)+' · '+fd(upcoming[0].day)+'.'}
- const suggestions=[];
- if(overdue.length)suggestions.push({icon:'!',title:'Ponete al día',desc:overdue.length+' recordatorio'+(overdue.length===1?'':'s')+' vencido'+(overdue.length===1?'':'s')+' sin completar.',action:"go('rem')",label:'Revisar'});
- if(!todayList.length&&!overdue.length)suggestions.push({icon:'✓',title:'Espacio para avanzar',desc:'No aparecen compromisos pendientes para hoy.',action:"editEv(0,today())",label:'Planificar'});
- if(gymCount<4)suggestions.push({icon:'↗',title:'Tu semana de Gym',desc:gymCount+'/4 sesiones registradas esta semana.',action:"go('gym')",label:'Ver progreso'});
- if(upcoming.length)suggestions.push({icon:'▦',title:'Prepará lo que viene',desc:upcoming.length+' evento'+(upcoming.length===1?'':'s')+' en los próximos 7 días.',action:"go('cal')",label:'Ver agenda'});
- if(matches.length)suggestions.push({icon:'⚽',title:'Próximo partido',desc:TM[matches[0].k][0]+' · '+arf(matches[0].m.ts,{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})+'.',action:"go('foot')",label:'Ver fútbol'});
- const items=suggestions.slice(0,3);
- return `<section class="home-section intel-wrap" aria-label="MyDay Intelligence"><div class="intel-card"><div class="intel-head"><div class="intel-brand"><span class="intel-orb">✦</span><div><span class="home-kicker">MYDAY INTELLIGENCE</span><h2>Tu asistente personal</h2></div></div><span class="intel-live"><i></i> EN LÍNEA</span></div><div class="intel-chat-intro"><b>¿En qué te puedo ayudar?</b><p>Preguntame por tu agenda, Gym, recordatorios o los próximos partidos.</p></div><div class="intel-chat-suggestions"><button onclick="intelQuick('¿Qué tengo que hacer hoy?')">Mi día</button><button onclick="intelQuick('¿Qué tengo mañana?')">Mañana</button><button onclick="intelQuick('¿Qué tengo esta semana?')">Esta semana</button><button onclick="intelQuick('¿Cuándo juega Boca o Atlético?')">Fútbol</button></div><div class="intel-chat-messages" id="intel-chat-messages"><div class="intel-chat-msg bot"><div class="intel-chat-avatar">✦</div><div class="intel-chat-bubble">¡Hola! Soy MyDay Intelligence. Preguntame qué tenés hoy, cuándo es tu próximo compromiso o cómo viene tu semana.</div></div></div><form class="intel-chat-form" onsubmit="event.preventDefault();intelAsk()"><input id="intel-chat-input" type="text" maxlength="240" autocomplete="off" placeholder="Escribí tu pregunta..." aria-label="Escribí tu pregunta"><button type="submit" aria-label="Enviar pregunta">↑</button></form><div class="intel-foot">Respuestas basadas en tus datos guardados en este dispositivo · Sin inventar horarios</div></div></section>`;
+ return `<div class="intel-page"><header class="intel-page-head"><div><span class="home-kicker">MYDAY · ASISTENTE PERSONAL</span><h1>MyDay Intelligence</h1><p>Tu agenda, tus planes y tus próximos pasos en una conversación.</p></div><div class="intel-page-mark">✦</div></header><section class="intel-card intel-chat-card"><div class="intel-head"><div class="intel-brand"><span class="intel-orb">✦</span><div><span class="home-kicker">INTELLIGENCE ENGINE</span><h2>¿Qué necesitás saber?</h2></div></div><span class="intel-live"><i></i> LISTO</span></div><div class="intel-chat-intro"><b>Hola, ${esc(S.p.name)}.</b><p>Puedo consultar tu información guardada y darte respuestas concretas, con fechas y horarios cuando estén disponibles.</p></div><div class="intel-chat-suggestions"><button onclick="intelQuick('¿Qué tengo que hacer hoy?')">Mi día</button><button onclick="intelQuick('¿Qué tengo mañana?')">Mañana</button><button onclick="intelQuick('¿Qué tengo esta semana?')">Esta semana</button><button onclick="intelQuick('¿Qué recordatorios tengo pendientes?')">Pendientes</button><button onclick="intelQuick('¿Cuándo juega Boca?')">Boca</button><button onclick="intelQuick('¿Qué entrenamiento me toca hoy?')">Gym</button></div><div class="intel-chat-messages" id="intel-chat-messages"><div class="intel-chat-msg bot"><div class="intel-chat-avatar">✦</div><div class="intel-chat-bubble">¡Hola! Soy MyDay Intelligence. Preguntame por tu día, tus pendientes o tus próximos compromisos.</div></div></div><form class="intel-chat-form" onsubmit="event.preventDefault();intelAsk()"><input id="intel-chat-input" type="text" maxlength="240" autocomplete="off" placeholder="Preguntale algo a MyDay..." aria-label="Preguntale algo a MyDay"><button type="submit" aria-label="Enviar pregunta">↑</button></form><div class="intel-foot">Respuestas generadas a partir de tus datos locales · Los horarios no cargados se indican como tales</div></section><div class="intel-capabilities"><div><b>▦ Agenda</b><span>Eventos y próximos compromisos</span></div><div><b>◷ Recordatorios</b><span>Pendientes y vencimientos</span></div><div><b>⚽ Fútbol</b><span>Fixture de Boca y Atlético</span></div><div><b>↗ Gym</b><span>Rutina y progreso semanal</span></div></div></div>`;
 }
 function home(){
  const d=new Date(),t=today(),n=gc(mon(d)),todayEvents=evOn(t).slice().sort((a,b)=>mins(a.start)-mins(b.start)),up=[];
@@ -819,7 +811,7 @@ function home(){
  const mc=k=>{const m=nextM(k);return `<div class="card home-match"><b>${TM[k][0]}</b>${m?mRow(m):empty('Sin próximo partido cargado.')}</div>`};
  const next=up[0],dayLabel=todayEvents.length?todayEvents.length+' evento'+(todayEvents.length===1?'':'s')+' en agenda':activeRem?'Tu agenda está tranquila por ahora':'Día libre: aprovechalo a tu manera';
  return `<section class="home-welcome"><div class="home-welcome-top"><span class="home-kicker">TU ESPACIO PERSONAL</span><span class="home-date">${d.toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'})}</span></div><h1>${hi()}, ${esc(S.p.name)}</h1><p>${dayLabel}</p><div class="home-stats"><div><b>${todayEvents.length}</b><small>Eventos hoy</small></div><div><b>${activeRem}</b><small>Avisos activos</small></div><div><b>${n}/4</b><small>Gym semanal</small></div></div></section>
- ${intelligence()}\n ${focus()}
+ ${focus()}
  <section class="home-section"><div class="home-section-head"><div><span class="home-kicker">TU DÍA</span><h2>Accesos rápidos</h2></div></div><div class="home-actions"><button onclick="editEv(0,today())"><span>＋</span><b>Evento</b></button><button onclick="editRm()"><span>◷</span><b>Recordatorio</b></button><button onclick="editLg()"><span>↗</span><b>Entrenamiento</b></button><button onclick="go('foot')"><span>⚽</span><b>Fútbol</b></button></div></section>
  <section class="home-section"><div class="home-section-head"><div><span class="home-kicker">AGENDA</span><h2>Hoy</h2></div><button class="home-link" onclick="go('cal')">Ver calendario ↗</button></div><div class="card home-list">${todayEvents.map(evRow).join('')||empty('No tenés eventos para hoy. Todo despejado.')}</div></section>
  <section class="home-section"><div class="home-section-head"><div><span class="home-kicker">LO QUE VIENE</span><h2>Próximos eventos</h2></div><span class="home-muted">14 días</span></div><div class="card home-list">${up.map(([day,e])=>`<div class="home-upcoming" onclick="editEv('${e.id}')"><span class="home-day"><b>${pd(day).getDate()}</b><small>${MES[pd(day).getMonth()].slice(0,3)}</small></span><i style="background:${cat(e.cat).c}"></i><div><b>${esc(e.title)}</b><small>${day===t?'Hoy':fd(day)} · ${e.start}</small></div><span class="home-chevron">›</span></div>`).join('')||empty('Todavía no hay eventos próximos.')}</div></section>
@@ -852,9 +844,10 @@ function quickOpen(kind){
  else if(kind==='football')go('foot');
 }
 function render(){
- const views={home,cal,gym,prof,foot,rem};
+ const views={home,cal,gym,prof,foot,rem,intel:intelligence};
  $('#mn').innerHTML=(views[T]||home)()+'<button class="quick-fab" onclick="quickMenu()" aria-label="Crear nuevo" title="Crear nuevo"><span>＋</span><small>Crear</small></button>';
- const items=[['home',I.home,'Inicio'],['cal',I.cal,'Calendario'],['rem',I.rem,'Recordatorios'],['gym',I.gym,'Gym'],['foot',I.foot,'Fútbol'],['prof',I.prof,'Perfil']];
+ if(T==='intel')intelPaint();
+ const items=[['home',I.home,'Inicio'],['cal',I.cal,'Calendario'],['rem',I.rem,'Recordatorios'],['gym',I.gym,'Gym'],['foot',I.foot,'Fútbol'],['intel',I.intel,'Intelligence'],['prof',I.prof,'Perfil']];
  $('#nv').innerHTML='<div class="nav-brand"><span class="nav-mark">M</span><div><b>MyDay</b><small>PERSONAL MANAGER</small></div></div><div class="nav-links">'+items.map(([k,i,n])=>`<button class="${T==k?'on':''}" ${T==k?'aria-current="page"':''} onclick="go('${k}')"><span class="nav-icon">${i}</span><span class="nav-label">${n}</span></button>`).join('')+'</div><div class="nav-foot"><span>Tu día, bajo control.</span></div>';
 }
 function tick(){const now=Date.now(),t=today(),fire=(id,a,b)=>{if(S.fired[id])return;S.fired[id]=1;save();toast(a+(b?' — '+b:''));try{if(Notification.permission==='granted'&&!window.__mydayPushReady)navigator.serviceWorker.ready.then(reg=>reg.showNotification(a,{body:b||'',icon:'./icon.svg',tag:id})).catch(()=>{})}catch(e){}};
