@@ -784,7 +784,7 @@ function intelAnswer(question){
  else if(asksGym)topic='gym';
  else if(asksFoot)topic='football';
  else if(asksRem)topic='reminders';
- else if(asksEvent||asksNext||asksCount)topic='agenda';
+ else if(asksEvent||asksNext||asksCount||/que tengo|mi agenda|mis planes|mis compromisos/.test(q))topic='agenda';
  else if(/\b(hola|buen dia|buenas tardes|buenas noches)\b/.test(q))topic='hello';
  else if(/hoy|manana|pasado manana|esta semana|proxima semana|proximos|fin de semana|finde|\b(lunes|martes|miercoles|jueves|viernes|sabado|domingo)\b/.test(q))topic='agenda';
  else topic='lookup';
@@ -806,7 +806,8 @@ function intelAnswer(question){
  const numericDate=q.match(/\b(\d{1,2})[\/-](\d{1,2})(?:[\/-](\d{2,4}))?\b/);
  if(numericDate){let y=numericDate[3]?Number(numericDate[3]):base.getFullYear();if(y<100)y+=2000;const d=new Date(y,Number(numericDate[2])-1,Number(numericDate[1]));if(d.getDate()===Number(numericDate[1])&&d.getMonth()===Number(numericDate[2])-1){from=d;to=new Date(d);label=intelDateLabel(d);explicitDate=true}}
  if(/proximos?\s+7/.test(q)){from=new Date(base);to=add(base,7);range=true;label='los próximos 7 días';explicitDate=true}
- if(!explicitDate&&(asksNext||asksRem||asksFoot)){from=new Date(base);to=add(base,62);range=true;label='los próximos 2 meses'}
+ if(topic==='lookup'&&explicitDate)topic='agenda';
+ if(!explicitDate&&(asksNext||asksRem||asksFoot||(topic==='agenda'&&(asksEvent||asksCount)))){from=new Date(base);to=add(base,62);range=true;label='los próximos 2 meses'}
  if(!explicitDate&&asksGym&&asksCount){from=mon(base);to=new Date(base);range=true;label='esta semana'}
  const fk=ds(from),tk=ds(to),all=[];
  const addOccurrence=(date,e,type)=>all.push({type,date,time:e.time||e.start||'',end:e.end||'',title:e.title||(type==='event'?'Evento':'Recordatorio'),desc:e.desc||'',cat:e.cat||'',team:e.team,unknown:e.unknown,overdue:e.overdue});
