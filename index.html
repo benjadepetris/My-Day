@@ -760,13 +760,13 @@ function intelMatchDate(m){return new Intl.DateTimeFormat('en-CA',{timeZone:TZ,y
 function intelAnswer(question){
  const clean=v=>String(v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
  const raw=String(question||'').trim(),q0=clean(raw).replace(/[¿¡]/g,''),now=new Date(),base=pd(today());
- const isNextFollowup=/^(?:(?:y|y entonces|y despues|despues|que sigue|lo siguiente)\s*)[?!.]*$/.test(q0)||/^(?:y )?(?:el|la|los|las) siguientes?[?!.]*$/.test(q0);
+ const isNextFollowup=/^(?:(?:y|y entonces|y despues|despues|que sigue|lo siguiente|que viene despues|y luego)(?: de (?:eso|ese|esa|el evento|la actividad))?)\s*[?!.]*$/.test(q0)||/^(?:y )?(?:el|la|los|las) siguientes?[?!.]*$/.test(q0)||/^(?:y )?despues de (?:eso|ese|esa|el evento|la actividad)\s*[?!.]*$/.test(q0);
  if(!q0)return 'Escribime una consulta y reviso tus datos.';
  let q=q0,topic='',team='',range=false,label='hoy',from=new Date(base),to=new Date(base),explicitDate=false;
  const days=['domingo','lunes','martes','miercoles','jueves','viernes','sabado'];
  const userTurns=intelChat.filter(x=>x.role==='user'),prev=userTurns[userTurns.length-2];
  const prevQ=prev?clean(prev.text):'';
- const short=/^(?:(?:y|y entonces|y para|y el|y la|y los|y las|para|el|la)\s+)?(?:hoy|manana|pasado manana|este fin de semana|el fin de semana|finde|esta semana|la semana que viene|proxima semana|lunes|martes|miercoles|jueves|viernes|sabado|domingo|boca|atletico|el decano|despues|y despues|solo eso|y los demas)(?:\s+(?:que viene|proximo|proxima))?\??$/.test(q);
+ const short=/^(?:(?:y|y entonces|y para|y el|y la|y los|y las|para|el|la)\s+)?(?:hoy|manana|pasado manana|este fin de semana|el fin de semana|finde|esta semana|la semana que viene|proxima semana|lunes|martes|miercoles|jueves|viernes|sabado|domingo|boca|atletico|el decano|despues|y despues|y despues de eso|y despues de ese|y despues de esa|despues de eso|despues de ese|despues de esa|que sigue|lo siguiente|y luego|solo eso|y los demas)(?:\s+(?:que viene|proximo|proxima))?\??$/.test(q);
  if(short){
   if(/boca|atletico|decano/.test(q))q+=' futbol partidos';
   else if(/recordatorio|pendiente|vencid|aviso/.test(prevQ))q+=' recordatorios pendientes';
@@ -876,10 +876,17 @@ function intelAnswer(question){
    const upcoming=all.filter(e=>future(e)&&e.type!=='reminder');
    let next=null;
    if(isNextFollowup&&intelLastAgendaItem){
-    const lastIndex=upcoming.findIndex(e=>e.date===intelLastAgendaItem.date&&e.type===intelLastAgendaItem.type&&e.title===intelLastAgendaItem.title&&e.time===intelLastAgendaItem.time);
-    next=lastIndex>=0?upcoming[lastIndex+1]||null:upcoming[0]||null;
+    // Las preguntas de continuación avanzan dentro del mismo día; no reinician la agenda.
+    const sameDay=upcoming.filter(e=>e.date===intelLastAgendaItem.date);
+    const lastIndex=sameDay.findIndex(e=>e.type===intelLastAgendaItem.type&&e.title===intelLastAgendaItem.title&&(e.time||'')===(intelLastAgendaItem.time||'')&&(e.id||null)===(intelLastAgendaItem.id||null));
+    next=lastIndex>=0?sameDay[lastIndex+1]||null:null;
+    if(!next){
+     const dayLabel=intelDateLabel(pd(intelLastAgendaItem.date));
+     const isToday=intelLastAgendaItem.date===today();
+     return isToday?'No hay nada más programado para hoy.':'No hay nada más programado para '+dayLabel+'.';
+    }
    }else next=upcoming[0]||null;
-   if(!next){if(!upcoming.length)return 'No encuentro próximos eventos o partidos cargados.';return 'No encuentro otro evento posterior en los datos que tengo cargados.'}
+   if(!next)return 'No encuentro próximos eventos o partidos cargados.';
    intelLastAgendaItem={date:next.date,type:next.type,title:next.title,time:next.time||'',id:next.id||null};
    return '<p>'+(isNextFollowup?'Después de eso, lo siguiente es:':'Lo próximo que tenés es:')+'</p>'+agenda([next],'');
   }
