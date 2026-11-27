@@ -137,6 +137,45 @@ button{touch-action:manipulation}
 }
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 
+
+/* MyDay 2.0 — navegación completa y experiencia responsive */
+.nav-brand,.nav-foot{display:none}
+#nv .nav-links{display:contents}
+#nv .nav-icon{font-size:0;display:flex;align-items:center;justify-content:center;padding:0;background:transparent}
+#nv .nav-icon svg{width:21px;height:21px;display:block}
+#nv .nav-label{font-size:10px;line-height:1.15;white-space:nowrap}
+#nv button{gap:4px;min-width:0}
+#nv button.on{color:var(--a);background:var(--as)}
+#nv button.on .nav-icon{background:transparent}
+@media(min-width:760px){
+ body{padding:0 24px 0 260px}
+ main{max-width:1120px;margin:0 auto;padding:34px 28px 48px}
+ #nv{position:fixed;left:18px;right:auto;top:18px;bottom:18px;transform:none;width:220px;max-width:none;margin:0;border:1px solid var(--l);border-radius:24px;padding:22px 14px;display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:24px;background:var(--c);box-shadow:0 14px 40px -26px rgba(10,22,55,.42)}
+ .nav-brand{display:flex;align-items:center;gap:11px;padding:2px 8px 18px;border-bottom:1px solid var(--l)}
+ .nav-mark{width:40px;height:40px;border-radius:13px;display:grid;place-items:center;background:linear-gradient(145deg,var(--a),#7c8eff);color:white;font-size:21px;font-weight:850;box-shadow:0 8px 18px -10px var(--a)}
+ .nav-brand b{display:block;font-size:18px;letter-spacing:-.5px;color:var(--t)}
+ .nav-brand small{font-size:9px;letter-spacing:1.1px;font-weight:800;margin-top:1px}
+ #nv .nav-links{display:flex;flex-direction:column;gap:6px}
+ #nv button{flex:none;width:100%;min-height:48px;display:flex;flex-direction:row;justify-content:flex-start;align-items:center;gap:13px;padding:0 13px;border-radius:13px;font-size:14px;font-weight:650;color:var(--m)}
+ #nv .nav-icon{width:24px;height:24px;flex:none}
+ #nv .nav-icon svg{width:21px;height:21px}
+ #nv .nav-label{font-size:14px;white-space:normal}
+ #nv button.on{color:var(--a);background:var(--as)}
+ #nv button:hover{background:var(--bg);color:var(--t)}
+ .nav-foot{display:block;margin-top:auto;padding:14px 8px 2px;border-top:1px solid var(--l);font-size:11px;color:var(--m)}
+ .hero{padding:30px 28px 22px}
+ .hero h1{font-size:38px}
+ .card{padding:19px}
+}
+@media(max-width:759px){
+ #nv{justify-content:space-around;gap:0}
+ #nv .nav-links{display:flex;flex:1;justify-content:space-around;gap:0;min-width:0}
+ #nv button{flex:1 1 0;padding:4px 1px;min-width:0}
+ #nv .nav-icon{height:25px}
+ #nv .nav-label{font-size:9px;letter-spacing:-.15px}
+}
+@media(max-width:360px){#nv .nav-label{font-size:8px}#nv button{padding-left:0;padding-right:0}}
+
 </style></head><body>
 <main id="mn" tabindex="-1"></main><nav id="nv" aria-label="Navegación principal"></nav><div id="md"></div><div id="tt" role="status" aria-live="polite"></div>
 <script src="./push-config.js"></script>
@@ -456,8 +495,15 @@ function prof(){const p=S.p;return `<h1>Perfil</h1><div class=card><div class=ro
  <h2>Categorías</h2><div class=card>${S.cats.map(c=>`<span class=ch style="background:${c.c}26;color:${c.c};margin:3px">${c.i} ${esc(c.n)}</span>`).join('')}<div style="margin-top:10px"><button class="b g s" onclick="addCat()">+ Categoría</button></div></div>
  <h2>Datos</h2><div class=card><p class=sub>Todo se guarda solo en este iPhone. Exportá una copia de vez en cuando.</p><div class=row><button class="b g" onclick="exp()">Exportar</button><button class="b g" onclick="imp()">Importar</button></div></div><p class=sub>El modo claro u oscuro sigue la configuración de iOS.</p>`}
 // ARRANQUE
-const go=t=>{T=t;scrollTo(0,0);render()};
-function render(){$('#mn').innerHTML={home,cal,tk,gym,prof,foot,rem}[T]();const on=T=='foot'||T=='rem'?'home':T;$('#nv').innerHTML=[['home',I.home,'Inicio'],['cal',I.cal,'Calendario'],['tk',I.tk,'Tareas'],['gym',I.gym,'Gym'],['prof',I.prof,'Perfil']].map(([k,i,n])=>`<button class="${on==k?'on':''}" onclick="go('${k}')"><span>${i}</span>${n}</button>`).join('')}
+I.rem=ic('<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/>');
+I.foot=ic('<path d="M12 3l3 5-3 3-3-3 3-5z"/><path d="M5 12l4-1 3 3-2 6-5-2-1-6z"/><path d="M19 12l-4-1-3 3 2 6 5-2 1-6z"/>');
+const go=t=>{T=t;scrollTo({top:0,behavior:'smooth'});render()};
+function render(){
+ const views={home,cal,tk,gym,prof,foot,rem};
+ $('#mn').innerHTML=(views[T]||home)();
+ const items=[['home',I.home,'Inicio'],['cal',I.cal,'Calendario'],['tk',I.tk,'Tareas'],['rem',I.rem,'Recordatorios'],['gym',I.gym,'Gym'],['foot',I.foot,'Fútbol'],['prof',I.prof,'Perfil']];
+ $('#nv').innerHTML='<div class="nav-brand"><span class="nav-mark">M</span><div><b>MyDay</b><small>PERSONAL MANAGER</small></div></div><div class="nav-links">'+items.map(([k,i,n])=>`<button class="${T==k?'on':''}" ${T==k?'aria-current="page"':''} onclick="go('${k}')"><span class="nav-icon">${i}</span><span class="nav-label">${n}</span></button>`).join('')+'</div><div class="nav-foot"><span>Tu día, bajo control.</span></div>';
+}
 function tick(){const now=Date.now(),t=today(),fire=(id,a,b)=>{if(S.fired[id])return;S.fired[id]=1;save();toast(a+(b?' — '+b:''));try{if(Notification.permission==='granted'&&!window.__mydayPushReady)navigator.serviceWorker.ready.then(reg=>reg.showNotification(a,{body:b||'',icon:'./icon.svg',tag:id})).catch(()=>{})}catch(e){}};
  S.rm.forEach(r=>{if(r.on!='0'&&!rdone(r)&&occ(r,t)&&new Date(t+'T'+r.time)<=now)fire('r'+r.id+t,r.title,r.desc)});
  {const R=ROUT[new Date().getDay()];if(R&&!S.at[t]&&new Date().getHours()>=18)fire('g'+t,'Hoy toca gym',R.n+': '+R.t)}
