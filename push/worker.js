@@ -82,6 +82,18 @@ async function handleRequest(request,env){
       .bind(s.endpoint,installationId,s.keys.p256dh,s.keys.auth,Date.now()).run();
     return json({ok:true});
   }
+  if(url.pathname==="/test"){
+    const subs=await env.DB.prepare("SELECT endpoint,p256dh,auth FROM subscriptions WHERE installation_id=?").bind(installationId).all();
+    if(!subs.results?.length)return json({ok:false,error:"No subscription found"},404);
+    let delivered=0,failed=0;
+    for(const sub of subs.results){
+      try{
+        const response=await sendWebPush(sub,{title:"MyDay: prueba de notificación",body:"¡El envío en segundo plano está funcionando!",id:"myday-test-"+Date.now(),url:"./"},env);
+        if(response.ok)delivered++;else{failed++;console.error("Test push endpoint returned",response.status);}
+      }catch(error){failed++;console.error("Test push delivery failed",error);}
+    }
+    return json({ok:delivered>0,delivered,failed});
+  }
   if(url.pathname==="/sync"){
     if(!Array.isArray(data.jobs)||data.jobs.length>500)return json({error:"Invalid jobs list"},400);
     await env.DB.prepare("DELETE FROM scheduled_notifications WHERE installation_id=? AND sent=0").bind(installationId).run();
@@ -105,20 +117,23 @@ async function deliverDue(env){
   const now=Date.now();
   const due=await env.DB.prepare("SELECT id,installation_id,title,body FROM scheduled_notifications WHERE sent=0 AND scheduled_at<=? ORDER BY scheduled_at LIMIT 100").bind(now).all();
   for(const job of due.results||[]){
-    await env.DB.prepare("UPDATE scheduled_notifications SET sent=1 WHERE installation_id=? AND id=?").bind(job.installation_id,job.id).run();
     const subs=await env.DB.prepare("SELECT endpoint,p256dh,auth FROM subscriptions WHERE installation_id=?").bind(job.installation_id).all();
+    if(!subs.results?.length){
+      console.error("No push subscription for due notification",job.id);
+      continue;
+    }
     let delivered=false;
-    for(const sub of subs.results||[]){
+    for(const sub of subs.results){
       try{
         const response=await sendWebPush(sub,{title:job.title,body:job.body,id:job.id,url:"./"},env);
         if(response.status===404||response.status===410){
           await env.DB.prepare("DELETE FROM subscriptions WHERE endpoint=?").bind(sub.endpoint).run();
         }else if(response.ok)delivered=true;
-        else console.error("Push endpoint returned",response.status);
+        else console.error("Push endpoint returned",response.status,await response.text().catch(()=> ""));
       }catch(error){console.error("Push delivery failed",error)}
     }
-    if(!delivered&&subs.results?.length){
-      await env.DB.prepare("UPDATE scheduled_notifications SET sent=0 WHERE installation_id=? AND id=?").bind(job.installation_id,job.id).run();
+    if(delivered){
+      await env.DB.prepare("UPDATE scheduled_notifications SET sent=1 WHERE installation_id=? AND id=?").bind(job.installation_id,job.id).run();
     }
   }
 }
