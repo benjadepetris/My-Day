@@ -2,5 +2,5 @@
 // No pongas claves privadas en este archivo.
 window.MYDAY_PUSH_CONFIG = {
   workerUrl: "https://myday-push.my-day-benjamin.workers.dev",
-  publicKey: "BFkAIfX-WI4sgXrf4KRVEyg64P5iIgPszK_DsO-4c9mSRLZUh66TpgimyglNbBmSITURuSbWJ1oQnbz7hxgf0hg"
+  publicKey: "BOsg4x7TjYx_FPxJJvIupJzDpOEuVu7Z7QzqKDsaz2uW_N5DF5SbV-fevnMU3AzeKruxQ-cgeKduqAgZsQxffNg",
 };
