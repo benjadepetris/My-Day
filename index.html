@@ -764,7 +764,7 @@ function intelAnswer(question){
  const days=['domingo','lunes','martes','miercoles','jueves','viernes','sabado'];
  const userTurns=intelChat.filter(x=>x.role==='user'),prev=userTurns[userTurns.length-2];
  const prevQ=prev?clean(prev.text):'';
- const short=/^(?:(?:y|y entonces|y para|y el|y la|y los|y las|para|el|la)\\s+)?(?:hoy|manana|pasado manana|este fin de semana|el fin de semana|finde|esta semana|la semana que viene|proxima semana|lunes|martes|miercoles|jueves|viernes|sabado|domingo|boca|atletico|el decano|despues|y despues|solo eso|y los demas)(?:\\s+(?:que viene|proximo|proxima))?\\??$/.test(q);
+ const short=/^(?:(?:y|y entonces|y para|y el|y la|y los|y las|para|el|la)\s+)?(?:hoy|manana|pasado manana|este fin de semana|el fin de semana|finde|esta semana|la semana que viene|proxima semana|lunes|martes|miercoles|jueves|viernes|sabado|domingo|boca|atletico|el decano|despues|y despues|solo eso|y los demas)(?:\s+(?:que viene|proximo|proxima))?\??$/.test(q);
  if(short){
   if(/boca|atletico|decano/.test(q))q+=' futbol partidos';
   else if(/recordatorio|pendiente|vencid|aviso/.test(prevQ))q+=' recordatorios pendientes';
