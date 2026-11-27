@@ -828,8 +828,8 @@ function intelAnswer(question){
  all.sort((a,b)=>a.date.localeCompare(b.date)||(a.time||'99:99').localeCompare(b.time||'99:99'));
  const future=e=>e.date>today()||(e.date===today()&&(!e.time||e.time>=pad(now.getHours())+':'+pad(now.getMinutes())));
  const fmtDate=e=>(range||explicitDate||e.overdue||e.forceDate)?intelDateLabel(pd(e.date))+' · ':'';
- const fmtTime=e=>e.type==='match'&&e.unknown?'Horario a confirmar':e.time?(e.end?e.time+' a '+e.end+' hs':e.time+' hs'):'Horario no especificado';
- const row=e=>'<div class="intel-chat-event"><span>'+(e.type==='match'?'⚽':e.type==='reminder'?'◷':'▦')+'</span><div><b>'+esc(fmtDate(e)+e.title)+'</b><small>'+esc(fmtTime(e)+(e.desc?' · '+e.desc:''))+'</small></div></div>';
+ const fmtTime=e=>e.type==='log'?'':e.type==='match'&&e.unknown?'Horario a confirmar':e.time?(e.end?e.time+' a '+e.end+' hs':e.time+' hs'):'Horario no especificado';
+ const row=e=>'<div class="intel-chat-event"><span>'+(e.type==='match'?'⚽':e.type==='reminder'?'◷':e.type==='log'?'🏋️':'▦')+'</span><div><b>'+esc(fmtDate(e)+e.title)+'</b><small>'+esc(e.type==='log'?(e.desc||''):fmtTime(e)+(e.desc?' · '+e.desc:''))+'</small></div></div>';
  const agenda=(list,heading)=>'<p>'+heading+'</p><div class="intel-chat-agenda">'+list.map(row).join('')+'</div>';
  if(topic==='hello'||topic==='help')return '<p>¡Hola! Soy MyDay Intelligence, tu asistente personal.</p><p>Puedo cruzar eventos, recordatorios, rutina y registros de Gym, y próximos partidos de Boca y Atlético. Entiendo fechas, cantidades, búsquedas por nombre y preguntas de seguimiento.</p><p>Por ejemplo: <b>«¿Cuándo tengo dentista?»</b>, <b>«¿Cuántos entrenamientos hice este mes?»</b> o <b>«¿Y mañana?»</b>.</p>';
  if(topic==='gym'){
@@ -838,14 +838,14 @@ function intelAnswer(question){
   const week=gc(mon(now)),routine=ROUT[from.getDay()];
   if(/ultimo|ultima|mas reciente/.test(q)){
    const last=[...S.lg].filter(l=>l.date).sort((a,b)=>b.date.localeCompare(a.date))[0];
-   return last?'<p>Tu registro más reciente es del <b>'+esc(intelDateLabel(pd(last.date)))+'</b>.</p>'+agenda([{type:'event',date:last.date,title:last.ex||last.title||'Entrenamiento',desc:(last.group||'')+(last.w?' · '+last.w+' kg':'')+(last.sets?' · '+last.sets+' series':'')+(last.reps?' · '+last.reps+' reps':'')}],'Detalle del registro:'):'Todavía no hay entrenamientos registrados.';
+   return last?'<p>Tu registro más reciente es del <b>'+esc(intelDateLabel(pd(last.date)))+'</b>.</p>'+agenda([{type:'log',date:last.date,title:last.ex||last.title||'Entrenamiento',desc:(last.group||'')+(last.w?' · '+last.w+' kg':'')+(last.sets?' · '+last.sets+' series':'')+(last.reps?' · '+last.reps+' reps':'')}],'Detalle del registro:'):'Todavía no hay entrenamientos registrados.';
   }
   if(asksCount||/progreso|sesiones|registros|veces|fui/.test(q)){
    const n=attendance.length||new Set(logs.map(l=>l.date)).size;
    return '<p>En '+label+' tenés <b>'+n+' día'+(n===1?'':'s')+'</b> con actividad de Gym registrada.</p><p>Encontré '+logs.length+' registro'+(logs.length===1?'':'s')+' de ejercicios. Esta semana llevás <b>'+week+' de 4 sesiones</b> marcadas como asistencia.</p>';
   }
   if(/hice|registre|registrado|ejercicios/.test(q)&&logs.length){
-   return agenda(logs.slice(0,12).map(l=>({type:'event',date:l.date,title:l.ex||l.title||'Ejercicio',desc:(l.group||'')+(l.w?' · '+l.w+' kg':'')+(l.sets?' · '+l.sets+' series':'')+(l.reps?' · '+l.reps+' reps':'')})),'Estos son tus registros de Gym para '+label+':');
+   return agenda(logs.slice(0,12).map(l=>({type:'log',date:l.date,title:l.ex||l.title||'Ejercicio',desc:(l.group||'')+(l.w?' · '+l.w+' kg':'')+(l.sets?' · '+l.sets+' series':'')+(l.reps?' · '+l.reps+' reps':'')})),'Estos son tus registros de Gym para '+label+':');
   }
   const plans=[];for(let d=new Date(from);d<=to;d=add(d,1)){const r=ROUT[d.getDay()];if(r)plans.push({type:'event',date:ds(d),title:r.n,desc:r.t,forceDate:true})}
   if(range&&plans.length)return agenda(plans,'Según tu rutina, estos son los entrenamientos previstos para '+label+':');
