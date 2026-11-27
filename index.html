@@ -176,6 +176,28 @@ button{touch-action:manipulation}
 }
 @media(max-width:360px){#nv .nav-label{font-size:8px}#nv button{padding-left:0;padding-right:0}}
 
+
+/* MyDay Studio — acciones rápidas y pulido visual */
+.quick-fab{position:fixed;z-index:4;right:18px;bottom:calc(88px + env(safe-area-inset-bottom,0px));display:flex;align-items:center;gap:8px;border:0;border-radius:999px;padding:12px 17px;background:linear-gradient(135deg,var(--a),#7188ff);color:white;font:700 14px inherit;box-shadow:0 12px 28px -10px color-mix(in srgb,var(--a) 65%,transparent);cursor:pointer;transition:transform .18s,box-shadow .18s}
+.quick-fab span{font-size:23px;line-height:18px;font-weight:400}.quick-fab small{color:inherit;font-size:13px;font-weight:750}
+.quick-fab:active{transform:scale(.95)}
+.quick-sheet{border-radius:26px 26px 0 0}
+.quick-grip{width:38px;height:4px;border-radius:9px;background:var(--l);margin:0 auto 18px}
+.quick-kicker{font-size:10px;letter-spacing:1.4px;font-weight:850;color:var(--a);margin:0 0 3px}
+.quick-sheet h3{font-size:22px;letter-spacing:-.6px;margin:0 0 16px}
+.quick-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:8px}
+.quick-grid button{min-height:105px;text-align:left;padding:13px;border:1px solid var(--l);border-radius:17px;background:var(--bg);color:var(--t);display:flex;flex-direction:column;align-items:flex-start;gap:5px;font:inherit;cursor:pointer;transition:transform .16s,border-color .16s}
+.quick-grid button:active{transform:scale(.97);border-color:var(--a)}
+.quick-grid button>span{width:30px;height:30px;display:grid;place-items:center;border-radius:10px;background:var(--as);color:var(--a);font-size:18px;font-weight:800}
+.quick-grid button b{font-size:14px}.quick-grid button small{font-size:11px}
+@media(min-width:760px){
+ .quick-fab{right:34px;bottom:30px;padding:14px 19px}
+ .quick-sheet{max-width:520px;border-radius:26px;margin:auto;padding:24px}
+ #md{align-items:center}
+}
+@media(max-width:380px){.quick-fab{right:12px;padding:11px 13px}.quick-fab small{font-size:12px}}
+#nv button:focus-visible,.quick-fab:focus-visible,.quick-grid button:focus-visible{outline:3px solid var(--a);outline-offset:3px}
+
 </style></head><body>
 <main id="mn" tabindex="-1"></main><nav id="nv" aria-label="Navegación principal"></nav><div id="md"></div><div id="tt" role="status" aria-live="polite"></div>
 <script src="./push-config.js"></script>
@@ -496,11 +518,25 @@ function prof(){const p=S.p;return `<h1>Perfil</h1><div class=card><div class=ro
  <h2>Datos</h2><div class=card><p class=sub>Todo se guarda solo en este iPhone. Exportá una copia de vez en cuando.</p><div class=row><button class="b g" onclick="exp()">Exportar</button><button class="b g" onclick="imp()">Importar</button></div></div><p class=sub>El modo claro u oscuro sigue la configuración de iOS.</p>`}
 // ARRANQUE
 I.rem=ic('<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/>');
-I.foot=ic('<path d="M12 3l3 5-3 3-3-3 3-5z"/><path d="M5 12l4-1 3 3-2 6-5-2-1-6z"/><path d="M19 12l-4-1-3 3 2 6 5-2 1-6z"/>');
+I.foot=ic('<circle cx="12" cy="12" r="9.5"/><path d="m12 6 3.5 2.5-1.3 4.1h-4.4L8.5 8.5 12 6Z"/><path d="M12 6 12 2.5M8.5 8.5 4 7M9.8 12.6 7 17.5M14.2 12.6l5.1 1.6M15.5 8.5 20 7M7 17.5l5 4 5-4"/>');
 const go=t=>{T=t;scrollTo({top:0,behavior:'smooth'});render()};
+function quickMenu(){
+ const M=$('#md');
+ M.innerHTML='<div class="sh quick-sheet" role="dialog" aria-modal="true" aria-labelledby="quick-title"><div class="quick-grip"></div><div class="row sp"><div><p class="quick-kicker">ACCESO RÁPIDO</p><h3 id="quick-title">¿Qué querés crear?</h3></div><button class="b g s" onclick="closeQuick()" aria-label="Cerrar">✕</button></div><div class="quick-grid"><button onclick="quickOpen(\'event\')"><span>▦</span><b>Evento</b><small>Organizá tu agenda</small></button><button onclick="quickOpen(\'task\')"><span>✓</span><b>Tarea</b><small>Sumá algo pendiente</small></button><button onclick="quickOpen(\'reminder\')"><span>♧</span><b>Recordatorio</b><small>No te olvides</small></button><button onclick="quickOpen(\'workout\')"><span>＋</span><b>Entrenamiento</b><small>Registrá tu progreso</small></button><button onclick="quickOpen(\'football\')"><span>⚽</span><b>Fútbol</b><small>Consultá tus equipos</small></button></div></div>';
+ M.classList.add('on');
+}
+function closeQuick(){const M=$('#md');M.classList.remove('on');M.innerHTML=''}
+function quickOpen(kind){
+ closeQuick();
+ if(kind==='event')editEv(0,today());
+ else if(kind==='task')editTk();
+ else if(kind==='reminder')editRm();
+ else if(kind==='workout')editLg();
+ else if(kind==='football')go('foot');
+}
 function render(){
  const views={home,cal,tk,gym,prof,foot,rem};
- $('#mn').innerHTML=(views[T]||home)();
+ $('#mn').innerHTML=(views[T]||home)()+'<button class="quick-fab" onclick="quickMenu()" aria-label="Crear nuevo" title="Crear nuevo"><span>＋</span><small>Crear</small></button>';
  const items=[['home',I.home,'Inicio'],['cal',I.cal,'Calendario'],['tk',I.tk,'Tareas'],['rem',I.rem,'Recordatorios'],['gym',I.gym,'Gym'],['foot',I.foot,'Fútbol'],['prof',I.prof,'Perfil']];
  $('#nv').innerHTML='<div class="nav-brand"><span class="nav-mark">M</span><div><b>MyDay</b><small>PERSONAL MANAGER</small></div></div><div class="nav-links">'+items.map(([k,i,n])=>`<button class="${T==k?'on':''}" ${T==k?'aria-current="page"':''} onclick="go('${k}')"><span class="nav-icon">${i}</span><span class="nav-label">${n}</span></button>`).join('')+'</div><div class="nav-foot"><span>Tu día, bajo control.</span></div>';
 }
