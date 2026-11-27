@@ -398,25 +398,26 @@ main .card,main .hero,main .football-head{animation:myday-enter .28s ease both}
 @media(max-width:430px){.f-team-grid{grid-template-columns:1fr 1fr;gap:8px}.f-team-card{padding:11px;border-radius:18px}.f-team-identity h3{font-size:13px}.f-team-ground b{font-size:10px}.f-toolbar{align-items:flex-start}.f-toolbar-actions{width:100%}.f-toolbar-actions .b{flex:1}.f-hero-side img{width:54px;height:54px}.f-hero-center{min-width:72px}.f-hero-side b{font-size:11px}}
 @media(max-width:350px){.f-team-grid{grid-template-columns:1fr}.f-settings{align-items:flex-start;flex-direction:column}.f-settings select{max-width:none;width:100%}}
 
-/* MyDay 6.0 — navegación móvil amplia y equilibrada */
+/* MyDay 6.1 — navegación móvil ordenada en dos niveles */
 @media(max-width:759px){
- #nv{height:auto;min-height:112px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(2,1fr);align-content:center;justify-content:stretch;gap:3px 5px;padding:7px 10px calc(8px + env(safe-area-inset-bottom,0px));border-top:1px solid color-mix(in srgb,var(--a) 13%,var(--l));box-shadow:0 -10px 32px -25px rgba(10,22,55,.38);background:color-mix(in srgb,var(--c) 94%,transparent)}
+ #nv{box-sizing:border-box;height:auto;min-height:116px;display:grid;grid-template-columns:repeat(12,minmax(0,1fr));grid-template-rows:repeat(2,48px);align-content:center;justify-content:stretch;gap:5px 4px;padding:8px 12px calc(9px + env(safe-area-inset-bottom,0px));border:0;border-top:1px solid color-mix(in srgb,var(--a) 13%,var(--l));border-radius:19px 19px 0 0;box-shadow:0 -10px 32px -25px rgba(10,22,55,.38);background:color-mix(in srgb,var(--c) 97%,transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
  #nv .nav-links{display:contents}
- #nv button{width:100%;height:47px;min-width:0;flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:3px 2px;border:1px solid transparent;border-radius:12px}
- #nv .nav-icon{height:22px;width:24px;display:grid;place-items:center}
+ #nv button{box-sizing:border-box;grid-column:span 3;width:100%;height:48px;min-width:0;min-height:0;flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:3px 2px;border:1px solid transparent;border-radius:12px;background:transparent;color:var(--m);transition:background .16s,border-color .16s,color .16s}
+ #nv button:nth-child(n+5){grid-column:span 4}
+ #nv .nav-icon{height:22px;width:25px;display:grid;place-items:center}
  #nv .nav-icon svg{width:19px;height:19px}
- #nv .nav-label{font-size:10px;line-height:1.05;letter-spacing:0;white-space:nowrap}
- #nv button.on{background:var(--as);border-color:color-mix(in srgb,var(--a) 15%,transparent);color:var(--a)}
- #nv button:last-of-type{grid-column:4}
- main{padding-bottom:calc(160px + env(safe-area-inset-bottom,0px))}
- .quick-fab{bottom:calc(132px + env(safe-area-inset-bottom,0px))}
+ #nv .nav-label{font-size:10px;font-weight:650;line-height:1.05;letter-spacing:0;white-space:nowrap}
+ #nv button.on{background:var(--as);border-color:color-mix(in srgb,var(--a) 16%,transparent);color:var(--a)}
+ #nv button:active{transform:scale(.97)}
+ main{padding-bottom:calc(164px + env(safe-area-inset-bottom,0px))}
+ .quick-fab{bottom:calc(136px + env(safe-area-inset-bottom,0px))}
 }
 @media(max-width:380px){
- #nv{min-height:108px;padding-left:7px;padding-right:7px;gap:2px 3px}
- #nv button{height:45px}
+ #nv{min-height:110px;padding-left:8px;padding-right:8px;gap:4px 2px}
+ #nv button{height:46px}
  #nv .nav-label{font-size:9px}
- main{padding-bottom:calc(154px + env(safe-area-inset-bottom,0px))}
- .quick-fab{bottom:calc(126px + env(safe-area-inset-bottom,0px))}
+ main{padding-bottom:calc(158px + env(safe-area-inset-bottom,0px))}
+ .quick-fab{bottom:calc(130px + env(safe-area-inset-bottom,0px))}
 }
 /* MyDay Intelligence 6.0 — lectura, contexto y conversación */
 .intel-chat-card{border-radius:25px}
@@ -808,6 +809,19 @@ function intelAnswer(question){
   const key=intelMatchDate(m);if(key>=fk&&key<=tk)all.push({type:'match',date:key,time:m.nt?'':new Intl.DateTimeFormat('en-GB',{timeZone:TZ,hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(m.ts)),title:TM[m.team][0]+' · partido',desc:(m.home||'')+' vs '+(m.away||''),team:m.team,unknown:!!m.nt,ts:m.ts});
  });
  all.sort((a,b)=>a.date.localeCompare(b.date)||(a.time||'99:99').localeCompare(b.time||'99:99'));
+ // Búsqueda semántica ligera sobre títulos y descripciones, además de las consultas por fecha.
+ const asksLookup=/\b(cuando|cu[aá]ndo|a que hora|a qu[eé] hora|d[oó]nde|buscar|busca|encontr[aá]|tengo|hay|esta|est[aá])\b/.test(q)&&!(/\b(hoy|manana|pasado manana|esta semana|proxima semana|lunes|martes|miercoles|jueves|viernes|sabado|domingo)\b/.test(q)&&!(/dentist|colegio|estudi|cumple|medic|cancha|p[áa]del|profesor|reuni|turno/.test(q)));
+ const stop=new Set(['cuando','cuándo','a','que','qué','hora','es','son','tengo','hay','esta','está','el','la','los','las','un','una','de','del','en','para','por','mi','mis','me',' toca','proximo','proxima','próximo','próxima','donde','dónde','buscar','busca','encontra','encontrá','hoy','mañana','manana','pasado','dia','día','este','esta','semana','lunes','martes','miercoles','miércoles','jueves','viernes','sabado','sábado','domingo','recordatorio','evento','agenda']);
+ const terms=q.split(/[^a-z0-9áéíóúñ]+/).map(x=>x.trim()).filter(x=>x.length>2&&!stop.has(x));
+ if(terms.length&&asksLookup){
+  const candidates=[];
+  for(let d=new Date(base);d<=add(base,90);d=add(d,1)){const key=ds(d);S.ev.filter(e=>occ(e,key)).forEach(e=>candidates.push({type:'event',date:key,time:e.start||'',end:e.end||'',title:e.title||'Evento',desc:e.desc||''}));}
+  S.rm.filter(r=>r.on!=='0'&&r.date&&r.date>=today()&&!r.done).forEach(r=>candidates.push({type:'reminder',date:r.date,time:r.time||'',title:r.title||'Recordatorio',desc:r.desc||''}));
+  S.mt.filter(m=>['boca','atu'].includes(m.team)&&Number.isFinite(+m.ts)&&m.ts>=now.getTime()-7200000).forEach(m=>candidates.push({type:'match',date:intelMatchDate(m),time:m.nt?'':new Intl.DateTimeFormat('en-GB',{timeZone:TZ,hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(m.ts)),title:TM[m.team][0]+' · partido',desc:(m.home||'')+' vs '+(m.away||''),team:m.team,unknown:!!m.nt,ts:m.ts}));
+  const matches=candidates.map(e=>{const hay=(e.title+' '+e.desc+' '+(e.type==='match'?'futbol partido '+(e.team==='boca'?'boca':'atletico'):'')).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');const score=terms.reduce((n,t)=>n+(hay.includes(t)?1:0),0);return {...e,score}}).filter(e=>e.score>0).sort((a,b)=>b.score-a.score||a.date.localeCompare(b.date)||(a.time||'99:99').localeCompare(b.time||'99:99')).slice(0,6);
+  if(matches.length){const detail=matches.map(e=>({...e,title:e.title+' · '+intelDateLabel(pd(e.date))}));return agenda(detail,'Encontré estas coincidencias en tu información guardada:');}
+  if(terms.length>=1)return '<p>Busqué <b>'+esc(terms.join(', '))+'</b> en tus eventos, recordatorios y partidos próximos, pero no encontré coincidencias.</p><p>Probá con el nombre tal como lo guardaste o revisá Calendario y Recordatorios.</p>';
+ }
  let selected=all;
  if(topic==='football')selected=all.filter(e=>e.type==='match'&&(!team||e.team===team));
  else if(topic==='reminders')selected=all.filter(e=>e.type==='reminder');
