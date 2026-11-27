@@ -25,6 +25,15 @@ const concat = (...parts) => {
 };
 const utf8 = value => new TextEncoder().encode(value);
 const u32 = n => new Uint8Array([(n>>>24)&255,(n>>>16)&255,(n>>>8)&255,n&255]);
+// Deriva la clave pública desde la privada para impedir que VAPID use claves distintas.
+async function getVapidKeys(env){
+  const privateKey=await crypto.subtle.importKey("pkcs8",unb64(env.VAPID_PRIVATE_KEY,"VAPID_PRIVATE_KEY"),{name:"ECDSA",namedCurve:"P-256"},true,["sign"]);
+  const jwk=await crypto.subtle.exportKey("jwk",privateKey);
+  if(!jwk.x||!jwk.y)throw new Error("No se pudo derivar la clave pública VAPID");
+  const publicRaw=concat(Uint8Array.of(4),unb64(jwk.x,"VAPID x"),unb64(jwk.y,"VAPID y"));
+  if(publicRaw.length!==65)throw new Error("La clave pública VAPID derivada no tiene 65 bytes");
+  return {privateKey,publicKey:b64url(publicRaw)};
+}
 async function hmac(keyBytes,data){
   const key=await crypto.subtle.importKey("raw",keyBytes,{name:"HMAC",hash:"SHA-256"},false,["sign"]);
   return new Uint8Array(await crypto.subtle.sign("HMAC",key,data));
@@ -43,9 +52,9 @@ async function vapidToken(endpoint,env){
   const header=b64url(utf8(JSON.stringify({typ:"JWT",alg:"ES256"})));
   const payload=b64url(utf8(JSON.stringify({aud:audience,exp:now+12*60*60,sub:env.VAPID_SUBJECT})));
   const unsigned=header+"."+payload;
-  const key=await crypto.subtle.importKey("pkcs8",unb64(env.VAPID_PRIVATE_KEY,"VAPID_PRIVATE_KEY"),{name:"ECDSA",namedCurve:"P-256"},false,["sign"]);
-  const signature=await crypto.subtle.sign({name:"ECDSA",hash:"SHA-256"},key,utf8(unsigned));
-  return unsigned+"."+b64url(signature);
+  const keys=await getVapidKeys(env);
+  const signature=await crypto.subtle.sign({name:"ECDSA",hash:"SHA-256"},keys.privateKey,utf8(unsigned));
+  return {token:unsigned+"."+b64url(signature),publicKey:keys.publicKey};
 }
 async function encryptPayload(subscription,payload){
   const clientPublic=unb64(subscription.p256dh,"subscription.p256dh"),authSecret=unb64(subscription.auth,"subscription.auth");
@@ -67,9 +76,9 @@ async function encryptPayload(subscription,payload){
 }
 async function sendWebPush(subscription,payload,env){
   const body=await encryptPayload(subscription,payload);
-  const jwt=await vapidToken(subscription.endpoint,env);
+  const vapid=await vapidToken(subscription.endpoint,env);
   return fetch(subscription.endpoint,{method:"POST",headers:{
-    "Authorization":"vapid t="+jwt+", k="+env.VAPID_PUBLIC_KEY,
+    "Authorization":"vapid t="+vapid.token+", k="+vapid.publicKey,
     "TTL":"86400",
     "Urgency":"normal",
     "Content-Type":"application/octet-stream",
@@ -87,6 +96,10 @@ async function handleRequest(request,env){
   if(url.pathname==="/subscribe"){
     const s=data.subscription||{};
     if(!s.endpoint||!s.keys?.p256dh||!s.keys?.auth)return json({error:"Invalid push subscription"},400);
+    const keys=await getVapidKeys(env);
+    if(data.applicationServerKey&&data.applicationServerKey!==keys.publicKey){
+      return json({error:"La clave pública de push-config.js no coincide con VAPID_PRIVATE_KEY. Hay que corregir el par de claves."},400);
+    }
     await env.DB.prepare("INSERT INTO subscriptions(endpoint,installation_id,p256dh,auth,created_at) VALUES(?,?,?,?,?) ON CONFLICT(endpoint) DO UPDATE SET installation_id=excluded.installation_id,p256dh=excluded.p256dh,auth=excluded.auth")
       .bind(s.endpoint,installationId,s.keys.p256dh,s.keys.auth,Date.now()).run();
     return json({ok:true});
