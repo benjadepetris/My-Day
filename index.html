@@ -215,7 +215,12 @@ function buildPushJobs(){
 }
 async function ensurePushSubscription(){
  const cfg=window.MYDAY_PUSH_CONFIG||{};
- if(!cfg.workerUrl||!cfg.publicKey)throw new Error('Push service is not configured');
+ if(!cfg.workerUrl)throw new Error('Push service is not configured');
+ const healthResponse=await fetch(cfg.workerUrl.replace(/\/$/,'')+'/health');
+ if(!healthResponse.ok)throw new Error('No se pudo consultar la configuración del servicio push (HTTP '+healthResponse.status+')');
+ const health=await healthResponse.json();
+ const publicKey=health.publicKey;
+ if(!publicKey)throw new Error(health.error||'El servicio push no publicó su clave VAPID');
  if(typeof Notification==='undefined'||Notification.permission!=='granted')throw new Error('Notification permission is not granted');
  const reg=await navigator.serviceWorker.register('./sw.js');
  await navigator.serviceWorker.ready;
@@ -223,17 +228,17 @@ async function ensurePushSubscription(){
  const keyMarker='myday.push.vapid.publicKey';
  const previousKey=localStorage.getItem(keyMarker);
  // If the VAPID key changed, the old browser subscription is no longer valid.
- if(sub&&previousKey!==cfg.publicKey){await sub.unsubscribe();sub=null;}
- if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(cfg.publicKey)});
- localStorage.setItem(keyMarker,cfg.publicKey);
+ if(sub&&previousKey!==publicKey){await sub.unsubscribe();sub=null;}
+ if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(publicKey)});
+ localStorage.setItem(keyMarker,publicKey);
  const installationId=getPushInstallationId();
- await pushRequest('/subscribe',{installationId,subscription:sub.toJSON(),applicationServerKey:cfg.publicKey});
+ await pushRequest('/subscribe',{installationId,subscription:sub.toJSON(),applicationServerKey:publicKey});
  window.__mydayPushReady=true;
  return {reg,sub,installationId};
 }
 async function syncPushJobs(){
  const cfg=window.MYDAY_PUSH_CONFIG||{};
- if(!cfg.workerUrl||!cfg.publicKey||typeof Notification==='undefined'||Notification.permission!=='granted')return;
+ if(!cfg.workerUrl||typeof Notification==='undefined'||Notification.permission!=='granted')return;
  const {installationId}=await ensurePushSubscription();
  await pushRequest('/sync',{installationId,jobs:buildPushJobs()});
 }
@@ -380,7 +385,7 @@ async function testPush(){
 async function perm(){
  if(typeof Notification==='undefined'||!('serviceWorker'in navigator)||!('PushManager'in window))return toast('Este navegador no admite notificaciones push. En iPhone, instalá MyDay desde Safari en la pantalla de inicio (iOS 16.4 o superior).');
  const cfg=window.MYDAY_PUSH_CONFIG||{};
- if(!cfg.workerUrl||!cfg.publicKey)return toast('Falta configurar el servicio push. Revisá README-NOTIFICATIONS.md en el repositorio.');
+ if(!cfg.workerUrl)return toast('Falta configurar la URL del servicio push.');
  const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent);
  const isStandalone=window.navigator.standalone===true||window.matchMedia('(display-mode: standalone)').matches;
  if(isIOS&&!isStandalone)return toast('Primero agregá MyDay a la pantalla de inicio y abrila desde su ícono.');
