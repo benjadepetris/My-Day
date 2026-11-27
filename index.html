@@ -725,7 +725,7 @@ function intelAnswer(question){
  let q=plain,topic='',team='',range=false,label='hoy',from=new Date(base),to=new Date(base),explicitDate=false;
  const days=['domingo','lunes','martes','miercoles','jueves','viernes','sabado'];
  // Entiende continuaciones breves según el tema de la última consulta.
- const prev=[...intelChat].reverse().find(x=>x.role==='user');
+ const userTurns=intelChat.filter(x=>x.role==='user'),prev=userTurns[userTurns.length-2];
  const prevQ=prev?String(prev.text).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''):'';
  const short=/^(y\s+)?(hoy|manana|pasado manana|lunes|martes|miercoles|jueves|viernes|sabado|domingo|boca|atletico|el decano|despues|y despues|solo eso|y los demas)\??$/.test(q);
  if(short){
