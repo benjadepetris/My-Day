@@ -744,6 +744,7 @@ function intelAnswer(question){
  S.mt.filter(m=>['boca','atu'].includes(m.team)&&Number.isFinite(+m.ts)&&m.ts>=now.getTime()-7200000).forEach(m=>{
   const key=intelMatchDate(m);if(key>=fk&&key<=tk)all.push({type:'match',date:key,time:m.nt?'':new Intl.DateTimeFormat('en-GB',{timeZone:TZ,hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(m.ts)),title:TM[m.team][0]+' · partido',desc:(m.home||'')+' vs '+(m.away||''),team:m.team,unknown:!!m.nt,ts:m.ts});
  });
+ if(/recordatorio|pendiente|vencid|aviso/.test(q))S.rm.filter(r=>r.on!=='0'&&r.rec==='No'&&!r.done&&r.date&&r.date<today()).forEach(r=>all.push({type:'reminder',date:r.date,time:r.time||'',end:'',title:r.title||'Recordatorio',desc:(r.desc||'')+' · Vencido'}));
  all.sort((a,b)=>a.date.localeCompare(b.date)||(a.time||'99:99').localeCompare(b.time||'99:99'));
  const gymAsked=/gym|entrenamiento|rutina|entreno/.test(q),footballAsked=/boca|atletico|decano|partido|futbol/.test(q),remAsked=/recordatorio|pendiente|vencid|aviso/.test(q);
  const onlyTeam=/boca/.test(q)?'boca':/atletico|decano/.test(q)?'atu':'';
