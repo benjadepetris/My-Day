@@ -227,7 +227,7 @@ async function ensurePushSubscription(){
  if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(cfg.publicKey)});
  localStorage.setItem(keyMarker,cfg.publicKey);
  const installationId=getPushInstallationId();
- await pushRequest('/subscribe',{installationId,subscription:sub.toJSON()});
+ await pushRequest('/subscribe',{installationId,subscription:sub.toJSON(),applicationServerKey:cfg.publicKey});
  window.__mydayPushReady=true;
  return {reg,sub,installationId};
 }
