@@ -220,6 +220,44 @@ button:active,.b:active,.q:active{transform:translateY(1px) scale(.985)}
 @media(min-width:760px){main{padding-top:38px}.card:hover{border-color:color-mix(in srgb,var(--a) 25%,var(--l));box-shadow:0 13px 30px -24px rgba(20,35,70,.5)}}
 @media(max-width:759px){main{padding:18px 15px calc(112px + env(safe-area-inset-bottom,0px))}.hero{padding:23px 19px 19px}.hero h1{font-size:29px}#nv{padding-left:5px;padding-right:5px;background:color-mix(in srgb,var(--c) 92%,transparent);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}#nv button.on{border-radius:13px}}
 @media(prefers-reduced-motion:reduce){.card,.it,button,.b,.q,.bar i{transition:none!important}}
+
+/* MyDay 4.0 — Inicio editorial y jerarquía visual */
+.home-welcome{position:relative;overflow:hidden;padding:26px;border-radius:27px;background:linear-gradient(135deg,color-mix(in srgb,var(--a) 96%,#17213a),color-mix(in srgb,var(--a) 72%,#243c70));color:#fff;box-shadow:0 20px 44px -28px color-mix(in srgb,var(--a) 75%,transparent);margin-bottom:14px}
+.home-welcome:after{content:"";position:absolute;width:230px;height:230px;border:1px solid #ffffff20;border-radius:50%;right:-105px;top:-115px;box-shadow:0 0 0 25px #ffffff08,0 0 0 52px #ffffff06;pointer-events:none}
+.home-welcome-top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.home-kicker{display:block;font-size:9px;letter-spacing:1.45px;font-weight:850;color:var(--a);margin-bottom:5px}
+.home-welcome .home-kicker{color:#ffffffb8}
+.home-date{font-size:11px;color:#ffffffc9;text-transform:capitalize}
+.home-welcome h1{font-size:clamp(27px,4vw,36px);letter-spacing:-1.2px;margin:16px 0 3px;font-weight:850}
+.home-welcome>p{font-size:13px;color:#ffffffcf;margin:0}
+.home-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:23px}
+.home-stats>div{padding:11px 12px;border-radius:15px;background:#ffffff15;border:1px solid #ffffff1c;backdrop-filter:blur(8px)}
+.home-stats b{display:block;font-size:23px;line-height:1.1;color:#fff;font-weight:820}
+.home-stats small{display:block;margin-top:4px;font-size:10px;color:#ffffffc9}
+.home-section{margin-top:23px}
+.home-section-head{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:10px}
+.home-section-head h2{font-size:19px;letter-spacing:-.55px;margin:0;font-weight:800}
+.home-section-head .home-kicker{margin:0 0 3px}
+.home-link{border:0;background:transparent;color:var(--a);font:700 11px inherit;cursor:pointer;padding:5px 0}
+.home-muted{font-size:11px;color:var(--m)}
+.home-actions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.home-actions button{min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:13px 5px;border:1px solid var(--l);border-radius:17px;background:var(--c);color:var(--t);cursor:pointer}
+.home-actions button span{width:34px;height:34px;display:grid;place-items:center;border-radius:12px;background:var(--as);color:var(--a);font-size:19px}
+.home-actions button b{font-size:10px}
+.home-list{padding:8px 14px}
+.home-upcoming{display:flex;align-items:center;gap:11px;padding:10px 2px;border-bottom:1px solid var(--l);cursor:pointer}
+.home-upcoming:last-child{border-bottom:0}
+.home-day{width:38px;height:42px;flex:none;border-radius:12px;background:var(--as);display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--a)}
+.home-day b{font-size:17px;line-height:1}.home-day small{font-size:9px;text-transform:uppercase;font-weight:800;margin-top:3px}
+.home-upcoming>i{width:3px;height:30px;border-radius:9px;flex:none}
+.home-upcoming>div{min-width:0;flex:1}.home-upcoming>div b,.home-upcoming>div small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.home-upcoming>div b{font-size:13px}.home-upcoming>div small{font-size:10px;margin-top:3px;color:var(--m)}
+.home-chevron{color:var(--m);font-size:20px}
+.home-gym{cursor:pointer}.home-gym small{display:block;color:var(--m);font-size:10px;margin-top:3px}.home-gym-number{font-size:20px;color:var(--a)}
+.home-football{display:grid;grid-template-columns:1fr 1fr;gap:10px}.home-match{margin:0!important;min-width:0}
+@media(max-width:480px){.home-welcome{padding:21px 18px;border-radius:23px}.home-stats{gap:6px}.home-stats>div{padding:10px 8px}.home-stats b{font-size:21px}.home-stats small{font-size:9px}.home-actions{gap:6px}.home-actions button{padding:11px 2px}.home-actions button b{font-size:9px}.home-football{grid-template-columns:1fr}}
+@media(min-width:760px){.home-welcome{padding:30px}.home-section{margin-top:27px}.home-actions{max-width:620px}.home-actions button{flex-direction:row;justify-content:flex-start;padding:12px 15px}.home-actions button b{font-size:12px}}
+
 </style></head><body>
 <main id="mn" tabindex="-1"></main><nav id="nv" aria-label="Navegación principal"></nav><div id="md"></div><div id="tt" role="status" aria-live="polite"></div>
 <script src="./push-config.js"></script>
@@ -510,15 +548,23 @@ function foot(){const sec=k=>{const l=S.mt.filter(m=>m.team==k&&m.ts>=Date.now()
  <div class=football-tools><button class=b onclick="fix()">${busy?'Actualizando…':'↻ Actualizar fixture'}</button><button class="b g" onclick="editMt()">＋ Agregar partido</button></div>
  <label style="margin-top:8px">Aviso previo<select onchange="S.pre=+this.value;save()">${[[0,'Sin aviso previo'],[30,'30 min antes'],[60,'1 hora antes'],[120,'2 horas antes']].map(([v,l])=>`<option value=${v} ${v==S.pre?'selected':''}>${l}</option>`).join('')}</select></label>${sec('boca')}${sec('atu')}<p class=club-note>Escudos incluidos: clubes argentinos del paquete de imágenes adjunto. Los partidos manuales también reconocen sus nombres.</p>`}
 // INICIO / PERFIL
-function home(){const t=today(),n=gc(mon(new Date())),up=[];for(let i=0;i<=14&&up.length<4;i++){const s=ds(add(new Date(),i));evOn(s).forEach(e=>up.push([s,e]))}
- rr=S.rm.map(r=>({r,t:nx(r)})).filter(x=>x.t&&x.r.on!='0'&&!rdone(x.r)).sort((a,b)=>a.t-b.t).slice(0,3),td=evOn(t);
- const mc=k=>{const m=nextM(k);return `<div class=card><b>${TM[k][0]}</b>${m?mRow(m):empty('Sin próximo partido cargado.')}</div>`};
- return `<div class=hero><h1>${hi()}, ${esc(S.p.name)}</h1><p>${new Date().toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'})}</p><div class=st><div><b>${td.length}</b><small>Eventos hoy</small></div><div><b>${S.rm.filter(x=>x.on!='0'&&!rdone(x)).length}</b><small>Avisos activos</small></div><div><b>${n}/4</b><small>Gym semanal</small></div></div></div>
- ${focus()}<div class=row style="margin-bottom:12px"><button class=q onclick="editEv(0,today())">Crear evento</button><button class=q onclick="editRm()">Crear recordatorio</button><button class=q onclick="editLg()">Registrar ejercicio</button><button class=q onclick="go('foot')">Fútbol</button><button class=q onclick="go('rem')">Recordatorios</button></div>
- <div class=card><b>Hoy</b>${td.map(evRow).join('')||empty('No tenés eventos hoy.')}</div>
- <div class=card><b>Próximos eventos</b>${up.map(([s,e])=>`<div class=it onclick="editEv('${e.id}')"><i style="background:${cat(e.cat).c}"></i><div><b>${esc(e.title)}</b><small>${fd(s)} · ${e.start}</small></div></div>`).join('')||empty('Nada en los próximos 14 días.')}</div>
- <div class=card><b>Próximos recordatorios</b>${rr.map(({r,t})=>`<div class=it onclick="editRm('${r.id}')"><div><b>${esc(r.title)}</b><small>${t.toLocaleString('es-AR',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</small></div></div>`).join('')||empty('Sin recordatorios próximos.')}</div>
- <div class=card onclick="go('gym')"><div class="row sp"><b>Gym esta semana</b><b>${n}/4</b></div><div class=bar><i style="width:${Math.min(100,n/4*100)}%"></i></div></div>${mc('boca')}${mc('atu')}`}
+function home(){
+ const d=new Date(),t=today(),n=gc(mon(d)),todayEvents=evOn(t).slice().sort((a,b)=>mins(a.start)-mins(b.start)),up=[];
+ for(let i=0;i<=14&&up.length<5;i++){const day=ds(add(d,i));evOn(day).slice().sort((a,b)=>mins(a.start)-mins(b.start)).forEach(e=>{if(day!==t||mins(e.start)>=d.getHours()*60+d.getMinutes())up.push([day,e])})}
+ rr=S.rm.map(r=>({r,t:nx(r)})).filter(x=>x.t&&x.r.on!='0'&&!rdone(x.r)).sort((a,b)=>a.t-b.t).slice(0,3);
+ const activeRem=S.rm.filter(x=>x.on!='0'&&!rdone(x)).length;
+ const logged=S.lg.filter(l=>l.date>=ds(mon(d))&&l.date<=t).length;
+ const mc=k=>{const m=nextM(k);return `<div class="card home-match"><b>${TM[k][0]}</b>${m?mRow(m):empty('Sin próximo partido cargado.')}</div>`};
+ const next=up[0],dayLabel=todayEvents.length?todayEvents.length+' evento'+(todayEvents.length===1?'':'s')+' en agenda':activeRem?'Tu agenda está tranquila por ahora':'Día libre: aprovechalo a tu manera';
+ return `<section class="home-welcome"><div class="home-welcome-top"><span class="home-kicker">TU ESPACIO PERSONAL</span><span class="home-date">${d.toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'})}</span></div><h1>${hi()}, ${esc(S.p.name)}</h1><p>${dayLabel}</p><div class="home-stats"><div><b>${todayEvents.length}</b><small>Eventos hoy</small></div><div><b>${activeRem}</b><small>Avisos activos</small></div><div><b>${n}/4</b><small>Gym semanal</small></div></div></section>
+ ${focus()}
+ <section class="home-section"><div class="home-section-head"><div><span class="home-kicker">TU DÍA</span><h2>Accesos rápidos</h2></div></div><div class="home-actions"><button onclick="editEv(0,today())"><span>＋</span><b>Evento</b></button><button onclick="editRm()"><span>◷</span><b>Recordatorio</b></button><button onclick="editLg()"><span>↗</span><b>Entrenamiento</b></button><button onclick="go('foot')"><span>⚽</span><b>Fútbol</b></button></div></section>
+ <section class="home-section"><div class="home-section-head"><div><span class="home-kicker">AGENDA</span><h2>Hoy</h2></div><button class="home-link" onclick="go('cal')">Ver calendario ↗</button></div><div class="card home-list">${todayEvents.map(evRow).join('')||empty('No tenés eventos para hoy. Todo despejado.')}</div></section>
+ <section class="home-section"><div class="home-section-head"><div><span class="home-kicker">LO QUE VIENE</span><h2>Próximos eventos</h2></div><span class="home-muted">14 días</span></div><div class="card home-list">${up.map(([day,e])=>`<div class="home-upcoming" onclick="editEv('${e.id}')"><span class="home-day"><b>${pd(day).getDate()}</b><small>${MES[pd(day).getMonth()].slice(0,3)}</small></span><i style="background:${cat(e.cat).c}"></i><div><b>${esc(e.title)}</b><small>${day===t?'Hoy':fd(day)} · ${e.start}</small></div><span class="home-chevron">›</span></div>`).join('')||empty('Todavía no hay eventos próximos.')}</div></section>
+ <section class="home-section"><div class="home-section-head"><div><span class="home-kicker">PENDIENTES</span><h2>Recordatorios</h2></div><button class="home-link" onclick="go('rem')">Ver todos ↗</button></div><div class="card home-list">${rr.map(({r,t})=>`<div class="it" onclick="editRm('${r.id}')"><div><b>${esc(r.title)}</b><small>${t.toLocaleString('es-AR',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</small></div><span class="home-chevron">›</span></div>`).join('')||empty('No tenés recordatorios próximos.')}</div></section>
+ <section class="home-section"><div class="home-section-head"><div><span class="home-kicker">CONSTANCIA</span><h2>Tu semana de gym</h2></div><button class="home-link" onclick="go('gym')">Ver gym ↗</button></div><div class="card home-gym" onclick="go('gym')"><div class="row sp"><div><b>${n} de 4 sesiones</b><small>${logged} registros esta semana</small></div><b class="home-gym-number">${Math.round(Math.min(1,n/4)*100)}%</b></div><div class="bar"><i style="width:${Math.min(100,n/4*100)}%"></i></div></div></section>
+ <section class="home-section"><div class="home-section-head"><div><span class="home-kicker">TUS EQUIPOS</span><h2>Fútbol</h2></div><button class="home-link" onclick="go('foot')">Ver fútbol ↗</button></div><div class="home-football">${mc('boca')}${mc('atu')}</div></section>`
+}
 function editP(){const p=S.p;form('Editar perfil',[{n:'name',l:'Nombre',v:p.name,r:1},{n:'age',l:'Edad',t:'number',v:p.age,r:1},{n:'h',l:'Altura (m)',t:'number',s:'0.01',v:p.h},{n:'w',l:'Peso (kg)',t:'number',s:'0.1',v:p.w}],v=>{if(+v.age<1||+v.age>120)return 'Edad inválida';S.p={...v,age:+v.age,h:+v.h,w:+v.w}})}
 function addCat(){form('Nueva categoría',[{n:'n',l:'Nombre',r:1},{n:'i',l:'Icono (emoji)',v:'⭐',r:1},{n:'c',l:'Color',t:'color',v:'#8c7bd1'}],v=>{if(S.cats.some(c=>c.n.toLowerCase()==v.n.toLowerCase()))return 'Esa categoría ya existe';S.cats.push(v)})}
 function exp(){form('Exportar datos',[{n:'d',l:'Copiá este texto para tu copia de seguridad',t:'area',v:JSON.stringify(S)}],()=>{})}
