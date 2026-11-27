@@ -804,6 +804,9 @@ function intelAnswer(question){
  if(/este mes|mes actual/.test(q)){from=new Date(base.getFullYear(),base.getMonth(),1);to=new Date(base.getFullYear(),base.getMonth()+1,0);range=true;label='este mes';explicitDate=true}
  if(/proximo mes|mes que viene/.test(q)){from=new Date(base.getFullYear(),base.getMonth()+1,1);to=new Date(base.getFullYear(),base.getMonth()+2,0);range=true;label='el próximo mes';explicitDate=true}
  if(/este ano|ano actual/.test(q)){from=new Date(base.getFullYear(),0,1);to=new Date(base.getFullYear(),11,31);range=true;label='este año';explicitDate=true}
+ const monthNames=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+ const monthIndex=monthNames.findIndex(m=>new RegExp('\\\\b'+m+'\\\\b').test(q));
+ if(monthIndex>=0){let y=base.getFullYear();if(monthIndex<base.getMonth()&&!/proximo|que viene/.test(q))y++;if(/proximo|que viene/.test(q)&&monthIndex<=base.getMonth())y++;from=new Date(y,monthIndex,1);to=new Date(y,monthIndex+1,0);range=true;label=monthNames[monthIndex]+' de '+y;explicitDate=true;const dayMatch=q.match(/\\b(\\d{1,2})\\s+de?\\s*\\b/);if(dayMatch){const day=Number(dayMatch[1]);if(day>=1&&day<=to.getDate()){from=new Date(y,monthIndex,day);to=new Date(from);label=intelDateLabel(from);range=false}}}
  const inDays=q.match(/en\s+(\d{1,2})\s+dias?/);if(inDays){const n=Math.min(90,Number(inDays[1]));from=add(base,n);to=new Date(from);label='dentro de '+n+' día'+(n===1?'':'s');explicitDate=true}
  const numericDate=q.match(/\b(\d{1,2})[\/-](\d{1,2})(?:[\/-](\d{2,4}))?\b/);
  if(numericDate){let y=numericDate[3]?Number(numericDate[3]):base.getFullYear();if(y<100)y+=2000;const d=new Date(y,Number(numericDate[2])-1,Number(numericDate[1]));if(d.getDate()===Number(numericDate[1])&&d.getMonth()===Number(numericDate[2])-1){from=d;to=new Date(d);label=intelDateLabel(d);explicitDate=true}}
@@ -856,7 +859,7 @@ function intelAnswer(question){
   return 'No encuentro partidos próximos '+(team?'de '+(team==='boca'?'Boca Juniors':'Atlético Tucumán'):'de Boca o Atlético')+' en los datos guardados. Actualizá el fixture en Fútbol para consultar los datos disponibles.';
  }
  if(topic==='reminders'){
-  const occurrences=all.filter(e=>e.type==='reminder'),selected=range&&explicitDate?occurrences:[...new Map(occurrences.map(e=>[e.id||e.title,e])).values()];
+  const occurrences=all.filter(e=>e.type==='reminder');let selected=occurrences;if(!(range&&explicitDate)){const seen=new Set();selected=occurrences.filter(e=>{const key=e.id||e.title;if(seen.has(key))return false;seen.add(key);return true})}
   if(asksCount)return '<p>Tenés <b>'+selected.length+' recordatorio'+(selected.length===1?'':'s')+'</b> pendiente'+(selected.length===1?'':'s')+' para '+label+'.</p>'+(selected.length?agenda(selected,'Este es el detalle:'):'');
   if(selected.length)return agenda(selected,'Encontré '+selected.length+' recordatorio'+(selected.length===1?'':'s')+' pendiente'+(selected.length===1?'':'s')+':');
   return 'No encuentro recordatorios pendientes para '+label+'.';
