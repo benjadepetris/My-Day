@@ -653,9 +653,6 @@ function footballCount(m){
  if(h>0)return 'Faltan '+h+' h'+(min?' '+min+' min':'');
  return 'Faltan '+Math.max(1,min)+' min';
 }
-function footballTeam(k){
- const isB=k==='boca',name=TM[k][0],short=isB?'BOCA':'DECANO',nick=isB=''; 
-}
 function foot(){
  const teams=['boca','atu'],upcoming=S.mt.filter(m=>teams.includes(m.team)&&m.ts>=Date.now()-72e5).sort((a,b)=>a.ts-b.ts),next=upcoming[0];
  const teamMeta={boca:{tag:'XENEIZE',ground:'La Bombonera',city:'La Boca · Buenos Aires',desc:'Toda la actualidad del equipo azul y oro.'},atu:{tag:'EL DECANO',ground:'Monumental José Fierro',city:'San Miguel de Tucumán',desc:'El orgullo del Jardín de la República.'}};
