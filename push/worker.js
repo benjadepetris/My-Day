@@ -9,7 +9,16 @@ const json = (data, status=200) => new Response(JSON.stringify(data), {
 });
 const b64 = bytes => btoa(String.fromCharCode(...new Uint8Array(bytes)));
 const b64url = bytes => b64(bytes).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
-const unb64 = value => Uint8Array.from(atob(value.replace(/-/g,"+").replace(/_/g,"/")+"=".repeat((4-value.length%4)%4)),c=>c.charCodeAt(0));
+const unb64 = (value,label="base64") => {
+  if(typeof value!=="string")throw new Error(label+" no es texto");
+  let clean=value.trim().replace(/^['"]|['"]$/g,"").replace(/\\s+/g,"").replace(/-/g,"+").replace(/_/g,"/");
+  if(!/^[A-Za-z0-9+/]*={0,2}$/.test(clean))throw new Error(label+" contiene caracteres inválidos");
+  clean=clean.replace(/=+$/,"");
+  if(clean.length%4===1)throw new Error(label+" tiene longitud base64 inválida");
+  clean+="=".repeat((4-clean.length%4)%4);
+  try{return Uint8Array.from(atob(clean),c=>c.charCodeAt(0))}
+  catch(_){throw new Error(label+" no se puede decodificar como base64")}
+};
 const concat = (...parts) => {
   const size=parts.reduce((n,p)=>n+p.length,0),out=new Uint8Array(size);
   let offset=0;for(const part of parts){out.set(part,offset);offset+=part.length}return out;
@@ -34,12 +43,12 @@ async function vapidToken(endpoint,env){
   const header=b64url(utf8(JSON.stringify({typ:"JWT",alg:"ES256"})));
   const payload=b64url(utf8(JSON.stringify({aud:audience,exp:now+12*60*60,sub:env.VAPID_SUBJECT})));
   const unsigned=header+"."+payload;
-  const key=await crypto.subtle.importKey("pkcs8",unb64(env.VAPID_PRIVATE_KEY),{name:"ECDSA",namedCurve:"P-256"},false,["sign"]);
+  const key=await crypto.subtle.importKey("pkcs8",unb64(env.VAPID_PRIVATE_KEY,"VAPID_PRIVATE_KEY"),{name:"ECDSA",namedCurve:"P-256"},false,["sign"]);
   const signature=await crypto.subtle.sign({name:"ECDSA",hash:"SHA-256"},key,utf8(unsigned));
   return unsigned+"."+b64url(signature);
 }
 async function encryptPayload(subscription,payload){
-  const clientPublic=unb64(subscription.p256dh),authSecret=unb64(subscription.auth);
+  const clientPublic=unb64(subscription.p256dh,"subscription.p256dh"),authSecret=unb64(subscription.auth,"subscription.auth");
   const clientKey=await crypto.subtle.importKey("raw",clientPublic,{name:"ECDH",namedCurve:"P-256"},false,[]);
   const serverPair=await crypto.subtle.generateKey({name:"ECDH",namedCurve:"P-256"},true,["deriveBits"]);
   const serverPublic=new Uint8Array(await crypto.subtle.exportKey("raw",serverPair.publicKey));
