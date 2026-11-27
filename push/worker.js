@@ -86,13 +86,25 @@ async function handleRequest(request,env){
     const subs=await env.DB.prepare("SELECT endpoint,p256dh,auth FROM subscriptions WHERE installation_id=?").bind(installationId).all();
     if(!subs.results?.length)return json({ok:false,error:"No subscription found"},404);
     let delivered=0,failed=0;
+    const errors=[];
     for(const sub of subs.results){
       try{
         const response=await sendWebPush(sub,{title:"MyDay: prueba de notificación",body:"¡El envío en segundo plano está funcionando!",id:"myday-test-"+Date.now(),url:"./"},env);
-        if(response.ok)delivered++;else{failed++;console.error("Test push endpoint returned",response.status);}
-      }catch(error){failed++;console.error("Test push delivery failed",error);}
+        if(response.ok)delivered++;
+        else{
+          failed++;
+          const detail=(await response.text().catch(()=> "")).slice(0,500);
+          errors.push({status:response.status,detail});
+          console.error("Test push endpoint returned",response.status,detail);
+        }
+      }catch(error){
+        failed++;
+        const detail=String(error?.message||error).slice(0,500);
+        errors.push({status:0,detail});
+        console.error("Test push delivery failed",detail);
+      }
     }
-    return json({ok:delivered>0,delivered,failed});
+    return json({ok:delivered>0,delivered,failed,errors});
   }
   if(url.pathname==="/sync"){
     if(!Array.isArray(data.jobs)||data.jobs.length>500)return json({error:"Invalid jobs list"},400);
