@@ -716,10 +716,22 @@ const mRow=m=>`<div class=match-card ${m.manual?`onclick="editMt('${m.id}')" sty
 function editMt(id){const e=S.mt.find(x=>x.id==id)||{team:'boca'};form(id?'Editar partido':'Agregar partido',[{n:'team',l:'Equipo',t:'sel',o:[['boca','Boca Juniors'],['atu','Atlético Tucumán']],v:e.team},{n:'home',l:'Local',v:e.home,r:1},{n:'away',l:'Visitante',v:e.away,r:1},{n:'date',l:'Fecha',t:'date',r:1,v:e.ts?arf(e.ts,{year:'numeric',month:'2-digit',day:'2-digit'}).split('/').reverse().join('-'):''},{n:'time',l:'Hora (Argentina)',t:'time',r:1,v:e.ts?arf(e.ts,{hour:'2-digit',minute:'2-digit',hour12:false}):''},{n:'comp',l:'Competición',t:'sel',o:[['Liga Profesional - Apertura','Liga Profesional - Apertura'],['Liga Profesional - Clausura','Liga Profesional - Clausura'],['Copa Argentina','Copa Argentina'],['Otra','Otra']],v:e.comp||'Liga Profesional - Apertura'},{n:'venue',l:'Estadio',v:e.venue}],
  v=>{const ts=Date.parse(v.date+'T'+v.time+':00-03:00');if(isNaN(ts))return 'Fecha u hora inválida';const{date,time,...r}=v;up(S.mt,id,{...r,ts,manual:1})},id&&rm(S.mt,id))}
 let Ftab='partidos';
-let busy=0;async function fix(){if(busy)return;busy=1;ER='';render();try{for(const[k,q]of[['boca','Boca Juniors'],['atu','Atletico Tucuman']]){
- const g=async u=>{const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),12000);try{const r=await fetch(API+u,{signal:ctrl.signal,headers:{Accept:'application/json'}});if(!r.ok)throw new Error('HTTP '+r.status);const data=await r.json();if(!data||typeof data!=='object')throw new Error('Respuesta inválida');return data}finally{clearTimeout(timer)}};const j=await g('searchteams.php?t='+encodeURIComponent(q)),tm=(j.teams||[]).find(t=>t.strCountry=='Argentina')||(j.teams||[])[0];if(!tm)throw 0;
- const e=await g('eventsnext.php?id='+tm.idTeam);(e.events||[]).forEach(v=>{const nt=!v.strTime,ts=Date.parse(v.dateEvent+'T'+(v.strTime||'03:00:00')+'Z'),id='api'+v.idEvent+k;if(isNaN(ts))return;S.mt=S.mt.filter(m=>m.id!=id);S.mt.push({id,team:k,home:v.strHomeTeam,away:v.strAwayTeam,ts,nt,comp:v.strLeague,venue:v.strVenue,hb:v.strHomeTeamBadge,ab:v.strAwayTeamBadge})})}
- S.upd=Date.now();S.mt=S.mt.filter(m=>m.manual||m.ts>Date.now()-864e5);save()}catch(x){ER='No fue posible actualizar el fixture. Se conservan los últimos datos válidos.'}busy=0;render()}
+let busy=0;async function fix(){if(busy)return;busy=1;ER='';render();try{
+ const apiCall=async(tool,payload={})=>{const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),15000);try{const r=await fetch('https://myday-football-api.my-day-benjamin.workers.dev/api/'+tool,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(payload),signal:ctrl.signal});const raw=await r.json();if(!r.ok)throw new Error(raw.message||raw.error||('HTTP '+r.status));const data=raw.data??raw;if(!data||typeof data!=='object')throw new Error('Respuesta inválida');return data}finally{clearTimeout(timer)}};
+ const norm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+ const directory=await apiCall('list_teams',{league:'argentina',season:new Date().getFullYear()});
+ const teams=directory.teams||[];
+ const targets=[['boca',['boca juniors','boca']],['atu',['atletico tucuman','atletico tucuman']] ];
+ const fetched=[];
+ for(const[k,aliases]of targets){
+  const tm=teams.find(t=>aliases.includes(norm(t.name))||aliases.includes(norm(t.display_name))||aliases.includes(norm(t.short_name)));
+  if(!tm)throw new Error('StrikerAPI no devolvió a '+(k==='boca'?'Boca Juniors':'Atlético Tucumán')+' en la lista de equipos de Argentina.');
+  const result=await apiCall('list_games',{league:'argentina',team:tm.team_id,season:new Date().getFullYear(),status:'scheduled',limit:50,timezone:'America/Argentina/Buenos_Aires'});
+  (result.games||[]).forEach(v=>{const ts=Date.parse(v.starts_at||v.date);if(!Number.isFinite(ts))return;fetched.push({id:'striker-'+v.game_id+'-'+k,team:k,home:v.home?.name||'Local',away:v.away?.name||'Visitante',ts,nt:!v.starts_at,comp:v.stage||'Liga Profesional',venue:v.venue||'',hb:'',ab:'',source:'striker',gameId:v.game_id,status:v.status,homeScore:v.home?.score,awayScore:v.away?.score})});
+ }
+ if(!fetched.length)throw new Error('StrikerAPI respondió correctamente, pero no encontró próximos partidos para los dos equipos. No se borraron los datos anteriores.');
+ S.mt=[...S.mt.filter(m=>m.manual),...fetched];S.upd=Date.now();save();
+ }catch(x){console.error('MyDay StrikerAPI:',x);ER='No se pudo actualizar desde StrikerAPI: '+(x.message||'error desconocido')+'. Se conservan los últimos datos válidos.'}busy=0;render()}
 function footballCount(m){
  const ms=m.ts-Date.now();
  if(ms<0)return 'Comenzó recientemente';
