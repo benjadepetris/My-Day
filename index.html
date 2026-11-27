@@ -221,6 +221,29 @@ button:active,.b:active,.q:active{transform:translateY(1px) scale(.985)}
 @media(max-width:759px){main{padding:18px 15px calc(112px + env(safe-area-inset-bottom,0px))}.hero{padding:23px 19px 19px}.hero h1{font-size:29px}#nv{padding-left:5px;padding-right:5px;background:color-mix(in srgb,var(--c) 92%,transparent);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}#nv button.on{border-radius:13px}}
 @media(prefers-reduced-motion:reduce){.card,.it,button,.b,.q,.bar i{transition:none!important}}
 
+/* MyDay Intelligence — briefing diario */
+.intel-wrap{margin-top:18px}
+.intel-card{position:relative;overflow:hidden;border:1px solid color-mix(in srgb,var(--a) 22%,var(--l));border-radius:23px;background:linear-gradient(145deg,color-mix(in srgb,var(--a) 7%,var(--c)),var(--c) 62%);box-shadow:0 12px 34px -28px color-mix(in srgb,var(--a) 55%,transparent)}
+.intel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:18px 18px 12px;border-bottom:1px solid var(--l)}
+.intel-brand{display:flex;align-items:center;gap:11px}.intel-orb{display:grid;place-items:center;width:37px;height:37px;border-radius:13px;background:var(--as);color:var(--a);font-size:21px}
+.intel-brand .home-kicker{margin:0 0 2px}.intel-brand h2{font-size:16px;letter-spacing:-.35px;margin:0;font-weight:820}
+.intel-live{display:flex;align-items:center;gap:5px;font-size:8px;letter-spacing:.7px;font-weight:850;color:var(--m);white-space:nowrap}
+.intel-live i{width:6px;height:6px;border-radius:50%;background:#20a879;box-shadow:0 0 0 3px #20a87920}
+.intel-main{padding:17px 18px 12px}.intel-eyebrow,.intel-subhead{font-size:9px;letter-spacing:1.15px;font-weight:850;color:var(--a)}
+.intel-main h3{font-size:19px;letter-spacing:-.55px;line-height:1.2;margin:7px 0 5px;color:var(--t)}
+.intel-main p{font-size:12px;line-height:1.5;color:var(--m);margin:0}
+.intel-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:0 18px 16px}
+.intel-metrics>div{padding:10px 11px;border:1px solid var(--l);border-radius:13px;background:color-mix(in srgb,var(--c) 78%,transparent)}
+.intel-metrics b{display:block;font-size:21px;line-height:1.1;letter-spacing:-.5px}.intel-metrics small{display:block;font-size:9px;color:var(--m);margin-top:4px}
+.intel-suggestions{padding:14px 18px 8px;border-top:1px solid var(--l)}.intel-subhead{margin-bottom:8px;color:var(--m)}
+.intel-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--l)}.intel-item:last-child{border-bottom:0}
+.intel-item-icon{display:grid;place-items:center;flex:0 0 30px;height:30px;border-radius:10px;background:var(--as);color:var(--a);font-weight:850}
+.intel-item-copy{flex:1;min-width:0}.intel-item-copy b{display:block;font-size:11px}.intel-item-copy small{display:block;font-size:10px;line-height:1.4;color:var(--m);margin-top:2px}
+.intel-item button{border:0;background:transparent;color:var(--a);font:700 10px inherit;white-space:nowrap;padding:7px 0 7px 5px;cursor:pointer}.intel-item button span{font-size:15px;margin-left:2px}
+.intel-empty{font-size:11px;color:var(--m);margin:8px 0 12px}
+.intel-foot{padding:10px 18px 13px;font-size:9px;color:var(--m);border-top:1px solid var(--l)}
+@media(max-width:390px){.intel-head{padding:15px 13px}.intel-main{padding:15px 13px 11px}.intel-metrics{padding:0 13px 13px;gap:6px}.intel-metrics>div{padding:9px 8px}.intel-metrics small{font-size:8px}.intel-suggestions{padding:12px 13px 7px}.intel-foot{padding:9px 13px 12px}.intel-item{gap:8px}}
+@media(prefers-reduced-motion:no-preference){.intel-card{animation:intel-in .35s ease-out both}@keyframes intel-in{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}}
 /* MyDay 4.0 — Inicio editorial y jerarquía visual */
 .home-welcome{position:relative;overflow:hidden;padding:26px;border-radius:27px;background:linear-gradient(135deg,color-mix(in srgb,var(--a) 96%,#17213a),color-mix(in srgb,var(--a) 72%,#243c70));color:#fff;box-shadow:0 20px 44px -28px color-mix(in srgb,var(--a) 75%,transparent);margin-bottom:14px}
 .home-welcome:after{content:"";position:absolute;width:230px;height:230px;border:1px solid #ffffff20;border-radius:50%;right:-105px;top:-115px;box-shadow:0 0 0 25px #ffffff08,0 0 0 52px #ffffff06;pointer-events:none}
@@ -677,6 +700,38 @@ function foot(){
  <p class="f-data-note">Fixture provisto por TheSportsDB. Los horarios se muestran según la hora de Argentina. Si el proveedor no tiene información disponible, podés cargar un partido manualmente.</p></div>`;
 }
 // INICIO / PERFIL
+function intelligence(){
+ const now=new Date(),t=today(),cut=now.getHours()*60+now.getMinutes();
+ const events=Array.isArray(S.ev)?S.ev:[],reminders=Array.isArray(S.rm)?S.rm:[],logs=Array.isArray(S.lg)?S.lg:[];
+ const todayList=evOn(t).filter(e=>!e.start||mins(e.start)>=cut);
+ const upcoming=[];
+ for(let i=1;i<=7;i++){
+  const day=ds(add(now,i));
+  evOn(day).forEach(e=>upcoming.push({e,day}));
+ }
+ upcoming.sort((a,b)=>a.day.localeCompare(b.day)||(a.e.start||'').localeCompare(b.e.start||''));
+ const overdue=reminders.filter(r=>{
+  if(r.on==='0'||rdone(r)||r.rec!=='No'||!r.date)return false;
+  return r.date<t||(r.date===t&&mins(r.time)<cut);
+ });
+ const pending=reminders.filter(r=>r.on!=='0'&&!rdone(r)).map(r=>({r,at:nx(r)})).filter(x=>x.at).sort((a,b)=>a.at-b.at);
+ const weekStart=ds(mon(now)),weekCount=logs.filter(l=>l.date>=weekStart&&l.date<=t).length;
+ const gymCount=gc(mon(now));
+ const matches=['boca','atu'].map(k=>({k,m:nextM(k)})).filter(x=>x.m).sort((a,b)=>a.m.ts-b.m.ts);
+ let headline='Tenés el día bastante despejado.',detail='Podés aprovechar para adelantar algo o tomarte un respiro.';
+ if(overdue.length){headline='Hay '+overdue.length+' recordatorio'+(overdue.length===1?'':'s')+' que revisar.';detail='Revisá lo pendiente para que no se te acumule.'}
+ else if(todayList.length){headline='Tu día ya tiene '+todayList.length+' compromiso'+(todayList.length===1?'':'s')+'.';detail=todayList[0].start?'Tu próximo evento es '+esc(todayList[0].title)+' a las '+esc(todayList[0].start)+'.':'Tu próximo compromiso es '+esc(todayList[0].title)+'.'}
+ else if(pending.length){headline='Tenés recordatorios en agenda.';detail='El próximo es '+esc(pending[0].r.title)+'.'}
+ else if(upcoming.length){headline='Tu agenda empieza a moverse.';detail='Lo próximo es '+esc(upcoming[0].e.title)+' · '+fd(upcoming[0].day)+'.'}
+ const suggestions=[];
+ if(overdue.length)suggestions.push({icon:'!',title:'Ponete al día',desc:overdue.length+' recordatorio'+(overdue.length===1?'':'s')+' vencido'+(overdue.length===1?'':'s')+' sin completar.',action:"go('rem')",label:'Revisar'});
+ if(!todayList.length&&!overdue.length)suggestions.push({icon:'✓',title:'Espacio para avanzar',desc:'No aparecen compromisos pendientes para hoy.',action:"editEv(0,today())",label:'Planificar'});
+ if(gymCount<4)suggestions.push({icon:'↗',title:'Tu semana de Gym',desc:gymCount+'/4 sesiones registradas esta semana.',action:"go('gym')",label:'Ver progreso'});
+ if(upcoming.length)suggestions.push({icon:'▦',title:'Prepará lo que viene',desc:upcoming.length+' evento'+(upcoming.length===1?'':'s')+' en los próximos 7 días.',action:"go('cal')",label:'Ver agenda'});
+ if(matches.length)suggestions.push({icon:'⚽',title:'Próximo partido',desc:TM[matches[0].k][0]+' · '+arf(matches[0].m.ts,{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})+'.',action:"go('foot')",label:'Ver fútbol'});
+ const items=suggestions.slice(0,3);
+ return `<section class="home-section intel-wrap" aria-label="MyDay Intelligence"><div class="intel-card"><div class="intel-head"><div class="intel-brand"><span class="intel-orb">✦</span><div><span class="home-kicker">MYDAY INTELLIGENCE</span><h2>Tu resumen inteligente</h2></div></div><span class="intel-live"><i></i> ACTUALIZADO</span></div><div class="intel-main"><span class="intel-eyebrow">LECTURA DE TU DÍA</span><h3>${headline}</h3><p>${detail}</p></div><div class="intel-metrics"><div><b>${todayList.length}</b><small>Por delante hoy</small></div><div><b>${overdue.length}</b><small>Para revisar</small></div><div><b>${upcoming.length}</b><small>Próx. 7 días</small></div></div><div class="intel-suggestions"><div class="intel-subhead">SUGERENCIAS PARA VOS</div>${items.map(x=>`<div class="intel-item"><span class="intel-item-icon">${x.icon}</span><div class="intel-item-copy"><b>${x.title}</b><small>${x.desc}</small></div><button onclick="${x.action}">${x.label} <span>›</span></button></div>`).join('')||'<p class="intel-empty">Cuando tengas nueva actividad, voy a reunirla acá.</p>'}</div><div class="intel-foot">Análisis local de tu agenda y actividad · Tus datos no salen del dispositivo</div></div></section>`;
+}
 function home(){
  const d=new Date(),t=today(),n=gc(mon(d)),todayEvents=evOn(t).slice().sort((a,b)=>mins(a.start)-mins(b.start)),up=[];
  for(let i=0;i<=14&&up.length<5;i++){const day=ds(add(d,i));evOn(day).slice().sort((a,b)=>mins(a.start)-mins(b.start)).forEach(e=>{if(day!==t||mins(e.start)>=d.getHours()*60+d.getMinutes())up.push([day,e])})}
@@ -686,7 +741,7 @@ function home(){
  const mc=k=>{const m=nextM(k);return `<div class="card home-match"><b>${TM[k][0]}</b>${m?mRow(m):empty('Sin próximo partido cargado.')}</div>`};
  const next=up[0],dayLabel=todayEvents.length?todayEvents.length+' evento'+(todayEvents.length===1?'':'s')+' en agenda':activeRem?'Tu agenda está tranquila por ahora':'Día libre: aprovechalo a tu manera';
  return `<section class="home-welcome"><div class="home-welcome-top"><span class="home-kicker">TU ESPACIO PERSONAL</span><span class="home-date">${d.toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'})}</span></div><h1>${hi()}, ${esc(S.p.name)}</h1><p>${dayLabel}</p><div class="home-stats"><div><b>${todayEvents.length}</b><small>Eventos hoy</small></div><div><b>${activeRem}</b><small>Avisos activos</small></div><div><b>${n}/4</b><small>Gym semanal</small></div></div></section>
- ${focus()}
+ ${intelligence()}\n ${focus()}
  <section class="home-section"><div class="home-section-head"><div><span class="home-kicker">TU DÍA</span><h2>Accesos rápidos</h2></div></div><div class="home-actions"><button onclick="editEv(0,today())"><span>＋</span><b>Evento</b></button><button onclick="editRm()"><span>◷</span><b>Recordatorio</b></button><button onclick="editLg()"><span>↗</span><b>Entrenamiento</b></button><button onclick="go('foot')"><span>⚽</span><b>Fútbol</b></button></div></section>
  <section class="home-section"><div class="home-section-head"><div><span class="home-kicker">AGENDA</span><h2>Hoy</h2></div><button class="home-link" onclick="go('cal')">Ver calendario ↗</button></div><div class="card home-list">${todayEvents.map(evRow).join('')||empty('No tenés eventos para hoy. Todo despejado.')}</div></section>
  <section class="home-section"><div class="home-section-head"><div><span class="home-kicker">LO QUE VIENE</span><h2>Próximos eventos</h2></div><span class="home-muted">14 días</span></div><div class="card home-list">${up.map(([day,e])=>`<div class="home-upcoming" onclick="editEv('${e.id}')"><span class="home-day"><b>${pd(day).getDate()}</b><small>${MES[pd(day).getMonth()].slice(0,3)}</small></span><i style="background:${cat(e.cat).c}"></i><div><b>${esc(e.title)}</b><small>${day===t?'Hoy':fd(day)} · ${e.start}</small></div><span class="home-chevron">›</span></div>`).join('')||empty('Todavía no hay eventos próximos.')}</div></section>
