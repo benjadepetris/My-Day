@@ -757,105 +757,121 @@ function intelDateLabel(d){return d.toLocaleDateString('es-AR',{weekday:'long',d
 function intelClock(v){return v?String(v).slice(0,5):''}
 function intelMatchDate(m){return new Intl.DateTimeFormat('en-CA',{timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(m.ts))}
 function intelAnswer(question){
- const raw=String(question||'').trim(),plain=raw.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''),now=new Date(),base=pd(today());
- let q=plain,topic='',team='',range=false,label='hoy',from=new Date(base),to=new Date(base),explicitDate=false;
+ const clean=v=>String(v||'').toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').trim();
+ const raw=String(question||'').trim(),q0=clean(raw),now=new Date(),base=pd(today());
+ if(!q0)return 'Escribime una consulta y reviso tus datos.';
+ let q=q0,topic='',team='',range=false,label='hoy',from=new Date(base),to=new Date(base),explicitDate=false;
  const days=['domingo','lunes','martes','miercoles','jueves','viernes','sabado'];
- // Entiende continuaciones breves según el tema de la última consulta.
  const userTurns=intelChat.filter(x=>x.role==='user'),prev=userTurns[userTurns.length-2];
- const prevQ=prev?String(prev.text).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''):'';
- const short=/^(y\s+)?(hoy|manana|pasado manana|lunes|martes|miercoles|jueves|viernes|sabado|domingo|boca|atletico|el decano|despues|y despues|solo eso|y los demas)\??$/.test(q);
+ const prevQ=prev?clean(prev.text):'';
+ const short=/^(y\\s+)?(hoy|manana|pasado manana|lunes|martes|miercoles|jueves|viernes|sabado|domingo|boca|atletico|el decano|despues|y despues|solo eso|y los demas)\\??$/.test(q);
  if(short){
   if(/boca|atletico|decano/.test(q))q+=' futbol partidos';
   else if(/recordatorio|pendiente/.test(prevQ))q+=' recordatorios pendientes';
-  else if(/gym|entrenamiento|rutina/.test(prevQ))q+=' gym entrenamiento';
-  else if(/boca|atletico|decano|futbol|partido/.test(prevQ))q+=' futbol partidos';
+  else if(/gym|entrenamiento|rutina|ejercicio/.test(prevQ))q+=' gym entrenamiento';
+  else if(/boca|atletico|decano|futbol|partido|fixture/.test(prevQ))q+=' futbol partidos';
+  else if(/recordatorio|pendiente/.test(prevQ))q+=' recordatorios';
   else q+=' agenda eventos';
  }
- if(/boca/.test(q))team='boca';else if(/atletico|decano/.test(q))team='atu';
- const asksGym=/\bgym\b|entrenamiento|entreno|rutina|ejercicio|sesion/.test(q);
+ const asksGym=/\\bgym\\b|entrenamiento|entreno|rutina|ejercicio|sesion|pesas/.test(q);
  const asksFoot=/boca|atletico|decano|futbol|partido|fixture/.test(q);
  const asksRem=/recordatorio|pendiente|vencid|aviso/.test(q);
  const asksEvent=/evento|agenda|compromiso|calendario|reunion|turno/.test(q);
  const asksNext=/proximo|siguiente|que sigue|despues|lo que viene/.test(q);
  const asksCount=/cuantos|cuantas|cantidad|cuenta|total/.test(q);
  const asksHelp=/que podes hacer|como funcionas|ayuda|para que servis|quien sos/.test(q);
- if(asksGym)topic='gym';else if(asksFoot)topic='football';else if(asksRem)topic='reminders';else if(asksEvent||asksNext||asksCount)topic='agenda';
- else if(/hola|buen dia|buenas tardes|buenas noches/.test(q))topic='hello';
- else if(/hoy|manana|pasado manana|esta semana|proxima semana|proximos|fin de semana|finde/.test(q)||days.some(d=>new RegExp('\\b'+d+'\\b').test(q)))topic='agenda';
- else topic='unknown';
+ if(/boca/.test(q))team='boca';else if(/atletico|decano/.test(q))team='atu';
  if(asksHelp)topic='help';
- // Fechas relativas y días de la semana.
+ else if(asksGym)topic='gym';
+ else if(asksFoot)topic='football';
+ else if(asksRem)topic='reminders';
+ else if(asksEvent||asksNext||asksCount)topic='agenda';
+ else if(/\\b(hola|buen dia|buenas tardes|buenas noches)\\b/.test(q))topic='hello';
+ else if(/hoy|manana|pasado manana|esta semana|proxima semana|proximos|fin de semana|finde|\\b(lunes|martes|miercoles|jueves|viernes|sabado|domingo)\\b/.test(q))topic='agenda';
+ else topic='lookup';
+ // Fechas relativas, rangos semanales y fechas escritas.
  if(/pasado manana/.test(q)){from=add(base,2);to=new Date(from);label='pasado mañana';explicitDate=true}
- else if(/\bmanana\b/.test(q)){from=add(base,1);to=new Date(from);label='mañana';explicitDate=true}
- else if(/\bhoy\b/.test(q)){explicitDate=true}
+ else if(/\\bmanana\\b/.test(q)){from=add(base,1);to=new Date(from);label='mañana';explicitDate=true}
+ else if(/\\bhoy\\b/.test(q)){explicitDate=true}
  else{
-  const idx=days.findIndex(x=>new RegExp('\\b'+x+'\\b').test(q));
+  const idx=days.findIndex(d=>new RegExp('\\\\b'+d+'\\\\b').test(q));
   if(idx>=0){let delta=(idx-base.getDay()+7)%7;if(delta===0&&/proximo|que viene/.test(q))delta=7;from=add(base,delta);to=new Date(from);label=days[idx]+(delta===7?' de la próxima semana':'');explicitDate=true}
  }
- if(/fin de semana|finde/.test(q)){const delta=(6-base.getDay()+7)%7;from=add(base,delta);to=add(from,1);range=true;label='este fin de semana';explicitDate=true}
+ if(/fin de semana|finde/.test(q)){let delta=(6-base.getDay()+7)%7;if(delta===0&&base.getDay()===0)delta=6;from=add(base,delta);to=add(from,1);range=true;label='este fin de semana';explicitDate=true}
  if(/proxima semana|la semana que viene/.test(q)){from=add(base,7-((base.getDay()+6)%7));to=add(from,6);range=true;label='la próxima semana';explicitDate=true}
  else if(/esta semana/.test(q)){from=new Date(base);to=add(base,6-((base.getDay()+6)%7));range=true;label='esta semana';explicitDate=true}
- const inDays=q.match(/en\s+(\d{1,2})\s+dias?/);if(inDays){const n=Math.min(60,Number(inDays[1]));from=add(base,n);to=new Date(from);label='dentro de '+n+' día'+(n===1?'':'s');explicitDate=true}
- if(/proximos?\s+7|siguiente\s+semana/.test(q)&&! /proxima semana|la semana que viene/.test(q)){from=new Date(base);to=add(base,7);range=true;label='los próximos 7 días'}
+ const inDays=q.match(/en\\s+(\\d{1,2})\\s+dias?/);if(inDays){const n=Math.min(90,Number(inDays[1]));from=add(base,n);to=new Date(from);label='dentro de '+n+' día'+(n===1?'':'s');explicitDate=true}
+ const numericDate=q.match(/\\b(\\d{1,2})[\\/-](\\d{1,2})(?:[\\/-](\\d{2,4}))?\\b/);
+ if(numericDate){let y=numericDate[3]?Number(numericDate[3]):base.getFullYear();if(y<100)y+=2000;const d=new Date(y,Number(numericDate[2])-1,Number(numericDate[1]));if(d.getDate()===Number(numericDate[1])&&d.getMonth()===Number(numericDate[2])-1){from=d;to=new Date(d);label=intelDateLabel(d);explicitDate=true}}
+ if(/proximos?\\s+7|siguiente\\s+semana/.test(q)&&! /proxima semana|la semana que viene/.test(q)){from=new Date(base);to=add(base,7);range=true;label='los próximos 7 días';explicitDate=true}
  if(!explicitDate&&(asksNext||asksRem||asksFoot)){from=new Date(base);to=add(base,62);range=true;label='los próximos 2 meses'}
  const fk=ds(from),tk=ds(to),all=[];
+ const addOccurrence=(date,e,type)=>all.push({type,date,time:e.time||e.start||'',end:e.end||'',title:e.title||(type==='event'?'Evento':'Recordatorio'),desc:e.desc||'',cat:e.cat||'',team:e.team,unknown:e.unknown,overdue:e.overdue});
  for(let d=new Date(from);d<=to;d=add(d,1)){
   const key=ds(d);
-  S.ev.filter(e=>occ(e,key)).forEach(e=>all.push({type:'event',date:key,time:e.start||'',end:e.end||'',title:e.title||'Evento',desc:e.desc||'',cat:e.cat||''}));
-  S.rm.filter(r=>r.on!=='0'&&occ(r,key)&&!(r.rec==='No'?!!r.done:r.dd===key)).forEach(r=>all.push({type:'reminder',date:key,time:r.time||'',title:r.title||'Recordatorio',desc:r.desc||''}));
+  S.ev.filter(e=>occ(e,key)).forEach(e=>addOccurrence(key,e,'event'));
+  S.rm.filter(r=>r.on!=='0'&&occ(r,key)&&!(r.rec==='No'?!!r.done:r.dd===key)).forEach(r=>addOccurrence(key,r,'reminder'));
  }
- S.rm.filter(r=>r.on!=='0'&&r.rec==='No'&&!r.done&&r.date&&r.date<today()).forEach(r=>{if(asksRem||topic==='agenda')all.push({type:'reminder',date:r.date,time:r.time||'',title:r.title||'Recordatorio',desc:(r.desc||'')+' · Vencido',overdue:true})});
+ S.rm.filter(r=>r.on!=='0'&&r.rec==='No'&&!r.done&&r.date&&r.date<today()).forEach(r=>{if(asksRem||topic==='agenda')addOccurrence(r.date,{...r,desc:(r.desc||'')+' · Vencido',overdue:true},'reminder')});
  S.mt.filter(m=>['boca','atu'].includes(m.team)&&Number.isFinite(+m.ts)&&m.ts>=now.getTime()-7200000).forEach(m=>{
-  const key=intelMatchDate(m);if(key>=fk&&key<=tk)all.push({type:'match',date:key,time:m.nt?'':new Intl.DateTimeFormat('en-GB',{timeZone:TZ,hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(m.ts)),title:TM[m.team][0]+' · partido',desc:(m.home||'')+' vs '+(m.away||''),team:m.team,unknown:!!m.nt,ts:m.ts});
+  const key=intelMatchDate(m);if(key>=fk&&key<=tk)addOccurrence(key,{title:TM[m.team][0]+' · partido',desc:(m.home||'')+' vs '+(m.away||''),team:m.team,unknown:!!m.nt,time:m.nt?'':new Intl.DateTimeFormat('en-GB',{timeZone:TZ,hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(m.ts))},'match');
  });
  all.sort((a,b)=>a.date.localeCompare(b.date)||(a.time||'99:99').localeCompare(b.time||'99:99'));
- // Búsqueda semántica ligera sobre títulos y descripciones, además de las consultas por fecha.
- const asksLookup=/\b(cuando|cu[aá]ndo|a que hora|a qu[eé] hora|d[oó]nde|buscar|busca|encontr[aá]|tengo|hay|esta|est[aá])\b/.test(q)&&!(/\b(hoy|manana|pasado manana|esta semana|proxima semana|lunes|martes|miercoles|jueves|viernes|sabado|domingo)\b/.test(q)&&!(/dentist|colegio|estudi|cumple|medic|cancha|p[áa]del|profesor|reuni|turno/.test(q)));
- const stop=new Set(['cuando','cuándo','a','que','qué','hora','es','son','tengo','hay','esta','está','el','la','los','las','un','una','de','del','en','para','por','mi','mis','me',' toca','proximo','proxima','próximo','próxima','donde','dónde','buscar','busca','encontra','encontrá','juega','juegan','jugar','partido','partidos','futbol','gym','entrenamiento','entreno','rutina','recordatorios','pendientes','hoy','mañana','manana','pasado','dia','día','este','esta','semana','lunes','martes','miercoles','miércoles','jueves','viernes','sabado','sábado','domingo','recordatorio','evento','agenda']);
- const terms=q.split(/[^a-z0-9áéíóúñ]+/).map(x=>x.trim()).filter(x=>x.length>2&&!stop.has(x));
- if(terms.length&&asksLookup){
-  const candidates=[];
-  for(let d=new Date(base);d<=add(base,90);d=add(d,1)){const key=ds(d);S.ev.filter(e=>occ(e,key)).forEach(e=>candidates.push({type:'event',date:key,time:e.start||'',end:e.end||'',title:e.title||'Evento',desc:e.desc||''}));}
-  S.rm.filter(r=>r.on!=='0'&&r.date&&r.date>=today()&&!r.done).forEach(r=>candidates.push({type:'reminder',date:r.date,time:r.time||'',title:r.title||'Recordatorio',desc:r.desc||''}));
-  S.mt.filter(m=>['boca','atu'].includes(m.team)&&Number.isFinite(+m.ts)&&m.ts>=now.getTime()-7200000).forEach(m=>candidates.push({type:'match',date:intelMatchDate(m),time:m.nt?'':new Intl.DateTimeFormat('en-GB',{timeZone:TZ,hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(m.ts)),title:TM[m.team][0]+' · partido',desc:(m.home||'')+' vs '+(m.away||''),team:m.team,unknown:!!m.nt,ts:m.ts}));
-  const matches=candidates.map(e=>{const hay=(e.title+' '+e.desc+' '+(e.type==='match'?'futbol partido '+(e.team==='boca'?'boca':'atletico'):'')).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');const score=terms.reduce((n,t)=>n+(hay.includes(t)?1:0),0);return {...e,score}}).filter(e=>e.score>0).sort((a,b)=>b.score-a.score||a.date.localeCompare(b.date)||(a.time||'99:99').localeCompare(b.time||'99:99')).slice(0,6);
-  if(matches.length){const detail=matches.map(e=>({...e,title:e.title+' · '+intelDateLabel(pd(e.date))}));return agenda(detail,'Encontré estas coincidencias en tu información guardada:');}
-  if(terms.length>=1)return '<p>Busqué <b>'+esc(terms.join(', '))+'</b> en tus eventos, recordatorios y partidos próximos, pero no encontré coincidencias.</p><p>Probá con el nombre tal como lo guardaste o revisá Calendario y Recordatorios.</p>';
- }
- let selected=all;
- if(topic==='football')selected=all.filter(e=>e.type==='match'&&(!team||e.team===team));
- else if(topic==='reminders')selected=all.filter(e=>e.type==='reminder');
- else if(topic==='agenda')selected=all.filter(e=>e.type!=='match'||!asksEvent);
  const future=e=>e.date>today()||(e.date===today()&&(!e.time||e.time>=pad(now.getHours())+':'+pad(now.getMinutes())));
- const fmtDate=e=>(range||e.overdue)?intelDateLabel(pd(e.date))+' · ':'';
+ const fmtDate=e=>(range||e.overdue||e.forceDate)?intelDateLabel(pd(e.date))+' · ':'';
  const fmtTime=e=>e.type==='match'&&e.unknown?'Horario a confirmar':e.time?(e.end?e.time+' a '+e.end+' hs':e.time+' hs'):'Horario no especificado';
  const row=e=>'<div class="intel-chat-event"><span>'+(e.type==='match'?'⚽':e.type==='reminder'?'◷':'▦')+'</span><div><b>'+esc(fmtDate(e)+e.title)+'</b><small>'+esc(fmtTime(e)+(e.desc?' · '+e.desc:''))+'</small></div></div>';
  const agenda=(list,heading)=>'<p>'+heading+'</p><div class="intel-chat-agenda">'+list.map(row).join('')+'</div>';
- if(topic==='hello'||topic==='help')return '<p>¡Hola! Soy MyDay Intelligence, tu asistente personal.</p><p>Puedo cruzar tu agenda, recordatorios, rutina de Gym y fixture de Boca y Atlético. También entiendo consultas por día, semana, próximos compromisos y preguntas de seguimiento.</p><p>Por ejemplo: <b>«¿Qué tengo el jueves?»</b>, <b>«¿Y después?»</b> o <b>«¿Cuántos recordatorios tengo pendientes?»</b>.</p>';
- if(topic==='unknown')return '<p>Quiero asegurarme de entenderte bien. Puedo ayudarte con:</p><p>• <b>Agenda:</b> qué tenés hoy, mañana o una fecha concreta.<br>• <b>Recordatorios:</b> pendientes, vencidos y próximos avisos.<br>• <b>Gym:</b> rutina del día y sesiones registradas.<br>• <b>Fútbol:</b> próximos partidos de Boca y Atlético.</p><p>Probá reformularlo con alguno de esos temas.</p>';
+ if(topic==='hello'||topic==='help')return '<p>¡Hola! Soy MyDay Intelligence, tu asistente personal.</p><p>Puedo cruzar eventos, recordatorios, rutina y registros de Gym, y próximos partidos de Boca y Atlético. Entiendo fechas, cantidades, búsquedas por nombre y preguntas de seguimiento.</p><p>Por ejemplo: <b>«¿Cuándo tengo dentista?»</b>, <b>«¿Cuántos entrenamientos hice este mes?»</b> o <b>«¿Y mañana?»</b>.</p>';
  if(topic==='gym'){
-  const routine=ROUT[from.getDay()],week=gc(mon(now)),logs=S.lg.filter(l=>l.date>=ds(mon(now))&&l.date<=today());
-  const todayRoutine=from.getDay()===now.getDay()&&fk===today();
-  if(/progreso|cuantas|cuantos|sesiones|registros/.test(q))return '<p>Esta semana registraste <b>'+week+' de 4 sesiones</b> en el seguimiento de Gym.</p><p>Hay '+logs.length+' registro'+(logs.length===1?'':'s')+' guardado'+(logs.length===1?'':'s')+' desde el lunes. El objetivo de referencia es 4 sesiones.</p>';
-  if(routine)return '<p>Según tu rutina, para <b>'+esc(label)+'</b> corresponde <b>'+esc(routine.n)+'</b>.</p><p>'+esc(routine.t)+'.</p><p>Esta semana llevás <b>'+week+' de 4 sesiones</b> registradas. La rutina indica el día, pero no asigna un horario.</p>';
+  const logs=[...S.lg].filter(l=>l.date&&l.date>=fk&&l.date<=tk).sort((a,b)=>b.date.localeCompare(a.date));
+  const attendance=Object.keys(S.at||{}).filter(k=>k>=fk&&k<=tk&&S.at[k]).sort();
+  const week=gc(mon(now)),routine=ROUT[from.getDay()];
+  if(/ultimo|ultima|mas reciente/.test(q)){
+   const last=[...S.lg].filter(l=>l.date).sort((a,b)=>b.date.localeCompare(a.date))[0];
+   return last?'<p>Tu registro más reciente es del <b>'+esc(intelDateLabel(pd(last.date)))+'</b>.</p>'+agenda([{type:'event',date:last.date,time:'',title:last.ex||last.title||'Entrenamiento',desc:(last.group||'')+(last.w?' · '+last.w+' kg':'')+(last.sets?' · '+last.sets+' series':'')+(last.reps?' · '+last.reps+' reps':'') }],'Detalle del registro:'):'Todavía no hay entrenamientos registrados.';
+  }
+  if(/progreso|cuantas|cuantos|sesiones|registros|veces|fui|hice/.test(q)){
+   const n=attendance.length||new Set(logs.map(l=>l.date)).size;
+   return '<p>En '+label+' tenés <b>'+n+' día'+(n===1?'':'s')+'</b> con actividad de Gym registrada.</p><p>Encontré '+logs.length+' registro'+(logs.length===1?'':'s')+' de ejercicios. Esta semana llevás <b>'+week+' de 4 sesiones</b> marcadas como asistencia.</p>';
+  }
+  const plans=[];for(let d=new Date(from);d<=to;d=add(d,1)){const r=ROUT[d.getDay()];if(r)plans.push({type:'event',date:ds(d),title:r.n,desc:r.t,forceDate:true})}
+  if(range&&plans.length)return agenda(plans,'Según tu rutina, estos son los entrenamientos previstos para '+label+':');
+  if(routine)return '<p>Según tu rutina, para <b>'+esc(label)+'</b> corresponde <b>'+esc(routine.n)+'</b>.</p><p>'+esc(routine.t)+'.</p><p>Esta semana llevás <b>'+week+' de 4 sesiones</b> registradas.</p>';
   return '<p>Para <b>'+esc(label)+'</b> no aparece una sesión asignada en tu rutina semanal.</p><p>Esta semana llevás '+week+' de 4 sesiones registradas.</p>';
  }
  if(topic==='football'){
-  if(selected.length)return agenda(selected,'Estos son los próximos partidos '+(team?'de '+(team==='boca'?'Boca Juniors':'Atlético Tucumán'):'de Boca y Atlético')+' que figuran en MyDay:');
-  return 'No encuentro partidos próximos '+(team?'de '+(team==='boca'?'Boca Juniors':'Atlético Tucumán'):'de Boca o Atlético')+' en los datos guardados. Actualizá el fixture en Fútbol para traer la información disponible.';
+  const matches=all.filter(e=>e.type==='match'&&(!team||e.team===team));
+  if(matches.length)return agenda(matches,'Estos son los próximos partidos '+(team?'de '+(team==='boca'?'Boca Juniors':'Atlético Tucumán'):'de Boca y Atlético')+' guardados en MyDay:');
+  return 'No encuentro partidos próximos '+(team?'de '+(team==='boca'?'Boca Juniors':'Atlético Tucumán'):'de Boca o Atlético')+' en los datos guardados. Actualizá el fixture en Fútbol para consultar los datos disponibles.';
  }
  if(topic==='reminders'){
-  if(asksCount)return '<p>Tenés <b>'+selected.length+' recordatorio'+(selected.length===1?'':'s')+'</b> pendiente'+(selected.length===1?'':'s')+' en '+label+'.</p>'+(selected.length?agenda(selected,'Este es el detalle:'):'');
-  if(selected.length)return agenda(selected,'Encontré '+selected.length+' recordatorio'+(selected.length===1?'':'s')+' pendiente'+(selected.length===1?'':'s')+(selected.some(e=>e.overdue)?', incluidos los vencidos':'')+':');
-  return 'No encuentro recordatorios pendientes para '+label+'. Revisá que estén activos en la sección Recordatorios si esperabas alguno.';
+  const selected=all.filter(e=>e.type==='reminder');
+  if(asksCount)return '<p>Tenés <b>'+selected.length+' recordatorio'+(selected.length===1?'':'s')+'</b> pendiente'+(selected.length===1?'':'s')+' para '+label+'.</p>'+(selected.length?agenda(selected,'Este es el detalle:'):'');
+  if(selected.length)return agenda(selected,'Encontré '+selected.length+' recordatorio'+(selected.length===1?'':'s')+' pendiente'+(selected.length===1?'':'s')+':');
+  return 'No encuentro recordatorios pendientes para '+label+'.';
  }
  if(topic==='agenda'){
-  if(asksCount)return '<p>En '+label+' hay <b>'+selected.length+' elemento'+(selected.length===1?'':'s')+'</b> guardado'+(selected.length===1?'':'s')+' entre eventos y recordatorios.</p>'+(selected.length?agenda(selected,'Detalle:'):'');
-  if(asksNext){const next=all.filter(e=>future(e)&&e.type!=='reminder').sort((a,b)=>a.date.localeCompare(b.date)||(a.time||'99:99').localeCompare(b.time||'99:99'))[0];return next?'<p>Lo próximo que tenés es:</p>'+agenda([next],''):'No encuentro próximos eventos o partidos cargados. Tu agenda está despejada por ahora.'}
-  if(selected.length){const upcoming=selected.filter(future).length;return agenda(selected,(range?'Para '+label+' encontré ':'En '+label+' tenés ')+selected.length+' elemento'+(selected.length===1?'':'s')+'.')+'<p>'+(upcoming? 'Todavía tenés '+upcoming+' por delante según los horarios guardados.':'No quedan más elementos futuros en este período según los horarios guardados.')+'</p>'}
-  return 'No encuentro eventos ni recordatorios cargados para '+label+'. No voy a inventarte actividades: podés revisar Calendario y Recordatorios para comprobar que estén guardados.';
+  let selected=all;
+  if(/solo eventos|eventos/.test(q)&&!asksRem)selected=all.filter(e=>e.type==='event');
+  if(/partidos/.test(q))selected=all.filter(e=>e.type==='match');
+  if(asksCount)return '<p>En '+label+' hay <b>'+selected.length+' elemento'+(selected.length===1?'':'s')+'</b> entre los datos consultados.</p>'+(selected.length?agenda(selected,'Detalle:'):'');
+  if(asksNext){const next=all.filter(e=>future(e)&&e.type!=='reminder')[0];return next?'<p>Lo próximo que tenés es:</p>'+agenda([next],''):'No encuentro próximos eventos o partidos cargados.'}
+  if(selected.length){const upcoming=selected.filter(future).length;return agenda(selected,(range?'Para '+label+' encontré ':'En '+label+' tenés ')+selected.length+' elemento'+(selected.length===1?'':'s')+'.')+'<p>'+(upcoming?'Todavía tenés '+upcoming+' por delante según los horarios guardados.':'No quedan más elementos futuros en este período.')+'</p>'}
+  return 'No encuentro eventos ni recordatorios cargados para '+label+'. No voy a inventarte actividades: podés revisar Calendario y Recordatorios.';
  }
- return 'Puedo ayudarte con agenda, recordatorios, Gym y fútbol. ¿Qué querés consultar?';
+ // Búsqueda por palabras relevantes en nombres, descripciones y categorías.
+ const stop=new Set('cuando cuándo a que qué hora es son tengo hay esta está el la los las un una de del en para por mi mis me toca proximo proxima próximo próxima donde dónde buscar busca encontra encontrá juega juegan jugar partido partidos futbol gym entrenamiento entreno rutina recordatorios pendientes hoy mañana manana pasado dia día este semana lunes martes miercoles miércoles jueves viernes sabado sábado domingo recordatorio evento agenda'.split(' '));
+ const terms=q.split(/[^a-z0-9]+/).filter(x=>x.length>2&&!stop.has(x));
+ if(terms.length){
+  const candidates=[];
+  for(let d=new Date(base);d<=add(base,180);d=add(d,1)){const key=ds(d);S.ev.filter(e=>occ(e,key)).forEach(e=>candidates.push({type:'event',date:key,time:e.start||'',end:e.end||'',title:e.title||'Evento',desc:e.desc||'',cat:e.cat||''}))}
+  S.rm.filter(r=>r.on!=='0'&&r.date&&r.date>=today()&&!rdone(r)).forEach(r=>candidates.push({type:'reminder',date:r.date,time:r.time||'',title:r.title||'Recordatorio',desc:r.desc||''}));
+  const scored=candidates.map(e=>{const hay=clean([e.title,e.desc,e.cat].join(' '));const score=terms.reduce((n,t)=>n+(hay.includes(t)?1:0),0);return {...e,score}}).filter(e=>e.score>0).sort((a,b)=>b.score-a.score||a.date.localeCompare(b.date)||(a.time||'99:99').localeCompare(b.time||'99:99')).slice(0,6);
+  if(scored.length)return agenda(scored.map(e=>({...e,forceDate:true})),'Encontré estas coincidencias en tu información guardada:');
+  return '<p>Busqué <b>'+esc(terms.join(', '))+'</b> en tus eventos y recordatorios, pero no encontré coincidencias.</p><p>Probá con otra palabra o con el nombre tal como lo guardaste.</p>';
+ }
+ return 'Puedo ayudarte con agenda, recordatorios, Gym y fútbol. Probá preguntarme por una fecha o por el nombre de una actividad.';
 }
 function intelPaint(){
  const box=document.getElementById('intel-chat-messages');if(!box)return;
