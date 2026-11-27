@@ -567,7 +567,7 @@ function chart(n){const p=S.lg.filter(l=>l.ex==n).sort((a,b)=>a.date.localeCompa
  const w=p.map(l=>+l.w),mx=Math.max(...w),mn=Math.min(...w),r=mx-mn||1,pt=p.map((l,i)=>[10+i*(300/(p.length-1)),100-(+l.w-mn)/r*80]);
  return `<svg viewBox="0 0 320 120" width=100%><polyline fill=none stroke="var(--a)" stroke-width=3 points="${pt.map(q=>q.join(',')).join(' ')}"/>${pt.map((q,i)=>`<circle cx=${q[0]} cy=${q[1]} r=4 fill="var(--n)"/><text x=${q[0]} y=${q[1]-8} font-size=10 text-anchor=middle fill="var(--m)">${w[i]}</text>`).join('')}</svg><small>${fd(p[0].date)} → ${fd(p[p.length-1].date)} · peso en kg</small>`}
 function gymHist(){const m=pd(GW),n=gc(m),names=[...new Set(S.lg.map(l=>l.ex))];if(!names.includes(GX))GX=names[0]||'';
- const hist=[1,2,3,4,5,6,7,8].map(k=>add(m,-7*k));
+ const hist=[1,2,3].map(k=>add(m,-7*k));
  return `<div class=card><div class="row sp"><button class="b g s" onclick="GW=ds(add(pd(GW),-7));render()">‹</button><b>Semana del ${m.getDate()} ${MES[m.getMonth()].slice(0,3)}</b><button class="b g s" onclick="GW=ds(add(pd(GW),7));render()">›</button></div>
  <div class=wk style="margin:12px 0">${Array.from({length:7},(_,i)=>{const s=ds(add(m,i));return `<button class="dy ${S.at[s]?'on':''} ${s==today()?'td':''}" onclick="dayAt('${s}')">${DS[i]}<small style="color:inherit">${add(m,i).getDate()}</small></button>`}).join('')}</div>
  <div class="row sp"><b>${n}/4 días</b><span class=sub>${n>=4?'¡Objetivo cumplido!':'Faltan '+(4-n)}</span></div><div class=bar><i style="width:${Math.min(100,n/4*100)}%"></i></div></div>
