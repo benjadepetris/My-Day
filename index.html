@@ -812,7 +812,7 @@ function intelAnswer(question){
  if(!explicitDate&&(asksNext||asksRem||asksFoot||(topic==='agenda'&&(asksEvent||asksCount)))){from=new Date(base);to=add(base,62);range=true;label='los próximos 2 meses'}
  if(!explicitDate&&asksGym&&asksCount){from=mon(base);to=new Date(base);range=true;label='esta semana'}
  const fk=ds(from),tk=ds(to),all=[];
- const addOccurrence=(date,e,type)=>all.push({type,date,time:e.time||e.start||'',end:e.end||'',title:e.title||(type==='event'?'Evento':'Recordatorio'),desc:e.desc||'',cat:e.cat||'',team:e.team,unknown:e.unknown,overdue:e.overdue});
+ const addOccurrence=(date,e,type)=>all.push({type,date,time:e.time||e.start||'',end:e.end||'',title:e.title||(type==='event'?'Evento':'Recordatorio'),desc:e.desc||'',cat:e.cat||'',id:e.id,team:e.team,unknown:e.unknown,overdue:e.overdue});
  for(let d=new Date(from);d<=to;d=add(d,1)){
   const key=ds(d);
   S.ev.filter(e=>occ(e,key)).forEach(e=>addOccurrence(key,e,'event'));
@@ -824,7 +824,7 @@ function intelAnswer(question){
  });
  all.sort((a,b)=>a.date.localeCompare(b.date)||(a.time||'99:99').localeCompare(b.time||'99:99'));
  const future=e=>e.date>today()||(e.date===today()&&(!e.time||e.time>=pad(now.getHours())+':'+pad(now.getMinutes())));
- const fmtDate=e=>(range||e.overdue||e.forceDate)?intelDateLabel(pd(e.date))+' · ':'';
+ const fmtDate=e=>(range||explicitDate||e.overdue||e.forceDate)?intelDateLabel(pd(e.date))+' · ':'';
  const fmtTime=e=>e.type==='match'&&e.unknown?'Horario a confirmar':e.time?(e.end?e.time+' a '+e.end+' hs':e.time+' hs'):'Horario no especificado';
  const row=e=>'<div class="intel-chat-event"><span>'+(e.type==='match'?'⚽':e.type==='reminder'?'◷':'▦')+'</span><div><b>'+esc(fmtDate(e)+e.title)+'</b><small>'+esc(fmtTime(e)+(e.desc?' · '+e.desc:''))+'</small></div></div>';
  const agenda=(list,heading)=>'<p>'+heading+'</p><div class="intel-chat-agenda">'+list.map(row).join('')+'</div>';
@@ -837,7 +837,7 @@ function intelAnswer(question){
    const last=[...S.lg].filter(l=>l.date).sort((a,b)=>b.date.localeCompare(a.date))[0];
    return last?'<p>Tu registro más reciente es del <b>'+esc(intelDateLabel(pd(last.date)))+'</b>.</p>'+agenda([{type:'event',date:last.date,title:last.ex||last.title||'Entrenamiento',desc:(last.group||'')+(last.w?' · '+last.w+' kg':'')+(last.sets?' · '+last.sets+' series':'')+(last.reps?' · '+last.reps+' reps':'')}],'Detalle del registro:'):'Todavía no hay entrenamientos registrados.';
   }
-  if(/progreso|cuantas|cuantos|sesiones|registros|veces|fui|hice/.test(q)){
+  if(asksCount||/progreso|sesiones|registros|veces|fui/.test(q)){
    const n=attendance.length||new Set(logs.map(l=>l.date)).size;
    return '<p>En '+label+' tenés <b>'+n+' día'+(n===1?'':'s')+'</b> con actividad de Gym registrada.</p><p>Encontré '+logs.length+' registro'+(logs.length===1?'':'s')+' de ejercicios. Esta semana llevás <b>'+week+' de 4 sesiones</b> marcadas como asistencia.</p>';
   }
@@ -851,11 +851,12 @@ function intelAnswer(question){
  }
  if(topic==='football'){
   const matches=all.filter(e=>e.type==='match'&&(!team||e.team===team));
+  if(asksCount)return '<p>Hay <b>'+matches.length+' partido'+(matches.length===1?'':'s')+'</b> de '+(team?(team==='boca'?'Boca Juniors':'Atlético Tucumán'):'Boca y Atlético')+' en '+label+'.</p>'+(matches.length?agenda(matches,'Estos son los partidos:'):'');
   if(matches.length)return agenda(matches,'Estos son los próximos partidos '+(team?'de '+(team==='boca'?'Boca Juniors':'Atlético Tucumán'):'de Boca y Atlético')+' guardados en MyDay:');
   return 'No encuentro partidos próximos '+(team?'de '+(team==='boca'?'Boca Juniors':'Atlético Tucumán'):'de Boca o Atlético')+' en los datos guardados. Actualizá el fixture en Fútbol para consultar los datos disponibles.';
  }
  if(topic==='reminders'){
-  const selected=all.filter(e=>e.type==='reminder');
+  const occurrences=all.filter(e=>e.type==='reminder'),selected=range&&explicitDate?occurrences:[...new Map(occurrences.map(e=>[e.id||e.title,e])).values()];
   if(asksCount)return '<p>Tenés <b>'+selected.length+' recordatorio'+(selected.length===1?'':'s')+'</b> pendiente'+(selected.length===1?'':'s')+' para '+label+'.</p>'+(selected.length?agenda(selected,'Este es el detalle:'):'');
   if(selected.length)return agenda(selected,'Encontré '+selected.length+' recordatorio'+(selected.length===1?'':'s')+' pendiente'+(selected.length===1?'':'s')+':');
   return 'No encuentro recordatorios pendientes para '+label+'.';
