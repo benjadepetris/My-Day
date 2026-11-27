@@ -258,6 +258,43 @@ button:active,.b:active,.q:active{transform:translateY(1px) scale(.985)}
 @media(max-width:480px){.home-welcome{padding:21px 18px;border-radius:23px}.home-stats{gap:6px}.home-stats>div{padding:10px 8px}.home-stats b{font-size:21px}.home-stats small{font-size:9px}.home-actions{gap:6px}.home-actions button{padding:11px 2px}.home-actions button b{font-size:9px}.home-football{grid-template-columns:1fr}}
 @media(min-width:760px){.home-welcome{padding:30px}.home-section{margin-top:27px}.home-actions{max-width:620px}.home-actions button{flex-direction:row;justify-content:flex-start;padding:12px 15px}.home-actions button b{font-size:12px}}
 
+
+/* MyDay 4.1 — sistema visual compartido entre secciones */
+main>h1{display:flex;align-items:center;gap:10px}
+main>h1:after{content:"";height:3px;width:24px;border-radius:9px;background:var(--a);opacity:.7;align-self:center}
+main>h2{display:flex;align-items:center;gap:9px}
+main>h2:before{content:"";width:4px;height:18px;border-radius:8px;background:var(--a);opacity:.75}
+main>.row.sp:first-child{margin-bottom:12px}
+main .seg{padding:4px;border:1px solid var(--l);border-radius:14px;background:var(--bg);gap:4px}
+main .seg button{border-radius:10px;padding:9px 13px;font-weight:700}
+main .seg button.on{background:var(--c);color:var(--a);box-shadow:0 2px 8px #15264a12}
+main .card> .row.sp{align-items:center}
+main .card label{margin-top:12px}
+main .card select,main .card input,main .card textarea{border-radius:12px}
+main .rt{overflow:hidden}
+main .rt summary{padding:2px 0;cursor:pointer;list-style:none}
+main .rt summary::-webkit-details-marker{display:none}
+main .rt summary:after{content:"⌄";float:right;color:var(--m);font-size:18px}
+main .rt[open] summary:after{content:"⌃"}
+main .football-head{padding:19px 20px;border:1px solid var(--l);border-radius:22px;background:linear-gradient(135deg,var(--c),var(--bg));margin-bottom:14px}
+main .football-head .av{box-shadow:0 8px 22px -12px var(--a)}
+main .football-tools{display:flex;gap:9px;flex-wrap:wrap;margin:12px 0}
+main .football-tools .b{flex:1;min-width:130px}
+main .club-note{padding:11px 13px;border-radius:13px;background:var(--bg);border:1px solid var(--l);font-size:11px;line-height:1.5}
+main .wk .dy{border-radius:13px}
+main .wk .dy.on{background:var(--as);color:var(--a);border-color:color-mix(in srgb,var(--a) 25%,var(--l))}
+main .rt .it{padding:9px 5px;border-bottom:1px solid var(--l);border-radius:0}
+main .rt .it:last-of-type{border-bottom:0}
+main .home-list>.it{padding:11px 3px}
+main .home-list>.it+.it{border-top:1px solid var(--l)}
+main .home-list>.it:hover{background:transparent}
+main .card .bar{margin-top:10px}
+main .av{box-shadow:0 8px 20px -13px var(--a)}
+main .card,main .hero,main .football-head{animation:myday-enter .28s ease both}
+@keyframes myday-enter{from{opacity:.72;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){main .card,main .hero,main .football-head{animation:none}}
+@media(max-width:759px){main .football-head{padding:16px;border-radius:19px}main .football-tools{gap:7px}main .seg button{padding:8px 10px}}
+
 </style></head><body>
 <main id="mn" tabindex="-1"></main><nav id="nv" aria-label="Navegación principal"></nav><div id="md"></div><div id="tt" role="status" aria-live="polite"></div>
 <script src="./push-config.js"></script>
@@ -375,7 +412,8 @@ const chip=n=>{const c=cat(n);return `<span class=ch style="background:${c.c}26;
 const RC=['No','Diaria','Semanal','Mensual'],RM=[['','Sin aviso'],['10','10 min antes'],['30','30 min antes'],['60','1 hora antes'],['1440','1 día antes']],PR=['Baja','Media','Alta'],PRK={Alta:0,Media:1,Baja:2};
 function occ(e,d){if(!e.date)return false;const a=pd(e.date),b=pd(d);if(b<a)return false;const n=Math.round((b-a)/864e5);
  if(e.rec=='Diaria')return true;if(e.rec=='Semanal')return n%7==0;if(e.rec=='Mensual')return a.getDate()==b.getDate();return n==0}
-const evOn=d=>S.ev.filter(e=>occ(e,d)).sort((a,b)=>(a.start||'').localeCompare(b.start||''));
+// Los eventos finalizados dejan de mostrarse en el día actual, sin borrar el registro ni afectar repeticiones.
+const evOn=d=>{const now=new Date(),isToday=d===today(),cut=now.getHours()*60+now.getMinutes();return S.ev.filter(e=>occ(e,d)&&!(isToday&&e.end&&mins(e.end)<=cut)).sort((a,b)=>(a.start||'').localeCompare(b.start||''))};
 let T='home',C={v:'Mes',d:today()},GW=ds(mon(new Date())),GX='',ER='';
 function toast(t){const e=$('#tt');e.textContent=t;e.style.display='block';clearTimeout(toast.k);toast.k=setTimeout(()=>e.style.display='none',5000)}
 function form(t,f,ok,del){let armed=0;const M=$('#md');
