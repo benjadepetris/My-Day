@@ -198,6 +198,28 @@ button{touch-action:manipulation}
 @media(max-width:380px){.quick-fab{right:12px;padding:11px 13px}.quick-fab small{font-size:12px}}
 #nv button:focus-visible,.quick-fab:focus-visible,.quick-grid button:focus-visible{outline:3px solid var(--a);outline-offset:3px}
 
+
+/* MyDay Atelier — refinamiento visual */
+main>h1{font-size:clamp(27px,4vw,34px);letter-spacing:-1.1px;font-weight:820;margin:8px 0 18px}
+main>h2{font-size:20px;letter-spacing:-.45px;font-weight:780;margin:24px 0 12px}
+.card{border:1px solid color-mix(in srgb,var(--l) 82%,transparent);border-radius:20px;box-shadow:0 8px 26px -22px rgba(20,35,70,.34);transition:border-color .18s,transform .18s,box-shadow .18s}
+.card+.card{margin-top:12px}
+.hero{border-radius:25px;box-shadow:0 18px 42px -30px color-mix(in srgb,var(--a) 55%,transparent);overflow:hidden}
+.hero h1{letter-spacing:-1.2px;font-weight:850}
+button,.b,.q{transition:background .18s,color .18s,border-color .18s,transform .16s,box-shadow .18s}
+button:active,.b:active,.q:active{transform:translateY(1px) scale(.985)}
+.it{border-radius:13px;transition:background .16s}
+.it:focus-within,.it:hover{background:color-mix(in srgb,var(--as) 48%,transparent)}
+.bar{height:8px;border-radius:99px;overflow:hidden;background:var(--bg)}
+.bar i{border-radius:inherit;transition:width .35s ease}
+#nv{backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+#nv button{border:1px solid transparent}
+#nv button.on{border-color:color-mix(in srgb,var(--a) 13%,transparent)}
+.quick-fab{box-shadow:0 14px 30px -12px color-mix(in srgb,var(--a) 72%,transparent)}
+.quick-grid button:hover{border-color:var(--a);background:var(--as)}
+@media(min-width:760px){main{padding-top:38px}.card:hover{border-color:color-mix(in srgb,var(--a) 25%,var(--l));box-shadow:0 13px 30px -24px rgba(20,35,70,.5)}}
+@media(max-width:759px){main{padding:18px 15px calc(112px + env(safe-area-inset-bottom,0px))}.hero{padding:23px 19px 19px}.hero h1{font-size:29px}#nv{padding-left:5px;padding-right:5px;background:color-mix(in srgb,var(--c) 92%,transparent);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}#nv button.on{border-radius:13px}}
+@media(prefers-reduced-motion:reduce){.card,.it,button,.b,.q,.bar i{transition:none!important}}
 </style></head><body>
 <main id="mn" tabindex="-1"></main><nav id="nv" aria-label="Navegación principal"></nav><div id="md"></div><div id="tt" role="status" aria-live="polite"></div>
 <script src="./push-config.js"></script>
@@ -393,10 +415,9 @@ function svEx(k,i,date){const e=ROUT[k].ex[i],w=document.getElementById('w'+i).v
  x?Object.assign(x,v):S.lg.push({id:uid(),...v});S.at[date]=1;save();
  toast(pr?'Nuevo récord en '+e[0]+': '+(+w>0?w+' kg':r+' reps'):nDone(ROUT[k],date)==ROUT[k].ex.length?'Entrenamiento completo. Buen trabajo':'Guardado');sess(k,date)}
 // Foco del día en Inicio
-function focus(){const t=today(),d=new Date(),k=d.getDay(),R=ROUT[k],r=[],od=S.tk.filter(x=>!x.done&&x.due&&x.due<t).length,nm=d.getHours()*60+d.getMinutes(),ne=evOn(t).find(e=>mins(e.start)>=nm);
+function focus(){const t=today(),d=new Date(),k=d.getDay(),R=ROUT[k],r=[],nm=d.getHours()*60+d.getMinutes(),ne=evOn(t).find(e=>mins(e.start)>=nm);
  if(R){const n=nDone(R,t);r.push(n==R.ex.length?['Entrenamiento de hoy completo',R.n+' · '+R.t]:['Hoy toca '+R.n,R.t+' · '+n+' de '+R.ex.length+' ejercicios',`<button class="b s" onclick="sess(${k})">${n?'Continuar':'Empezar'}</button>`])}
  else{const[x,q]=nextDay();r.push(['Hoy descansás','Próximo: '+WD[x]+', '+q.n+' ('+q.t+')'])}
- if(od)r.push([od+(od>1?' tareas vencidas':' tarea vencida'),'Conviene resolverlas primero',`<button class="b s g" onclick="TF.fe='Vencidas';TF.st='Pendientes';go('tk')">Ver</button>`]);
  if(ne){const m=mins(ne.start)-nm;r.push([esc(ne.title),'Hoy a las '+ne.start+(m<=180?' · en '+(m<60?m+' min':Math.round(m/6)/10+' h'):'')])}
  ['boca','atu'].forEach(q=>{const m=nextM(q);if(m&&arf(m.ts,{day:'numeric',month:'numeric'})==arf(Date.now(),{day:'numeric',month:'numeric'}))r.push(['Hoy juega '+TM[q][0],m.nt?'Hora a confirmar':arf(m.ts,{hour:'2-digit',minute:'2-digit'})+' h · '+m.home+' vs '+m.away])});
  return `<div class="card fc"><b>Foco de hoy</b>${r.map(([a,b,c])=>`<div class=it style="cursor:default"><div><b>${a}</b><small>${b}</small></div>${c||''}</div>`).join('')}</div>`}
@@ -500,13 +521,12 @@ function foot(){const sec=k=>{const l=S.mt.filter(m=>m.team==k&&m.ts>=Date.now()
  <label style="margin-top:8px">Aviso previo<select onchange="S.pre=+this.value;save()">${[[0,'Sin aviso previo'],[30,'30 min antes'],[60,'1 hora antes'],[120,'2 horas antes']].map(([v,l])=>`<option value=${v} ${v==S.pre?'selected':''}>${l}</option>`).join('')}</select></label>${sec('boca')}${sec('atu')}<p class=club-note>Escudos incluidos: clubes argentinos del paquete de imágenes adjunto. Los partidos manuales también reconocen sus nombres.</p>`}
 // INICIO / PERFIL
 function home(){const t=today(),n=gc(mon(new Date())),up=[];for(let i=0;i<=14&&up.length<4;i++){const s=ds(add(new Date(),i));evOn(s).forEach(e=>up.push([s,e]))}
- const pt=S.tk.filter(x=>!x.done).sort((a,b)=>sc(b)-sc(a)).slice(0,3),rr=S.rm.map(r=>({r,t:nx(r)})).filter(x=>x.t&&x.r.on!='0'&&!rdone(x.r)).sort((a,b)=>a.t-b.t).slice(0,3),td=evOn(t);
+ rr=S.rm.map(r=>({r,t:nx(r)})).filter(x=>x.t&&x.r.on!='0'&&!rdone(x.r)).sort((a,b)=>a.t-b.t).slice(0,3),td=evOn(t);
  const mc=k=>{const m=nextM(k);return `<div class=card><b>${TM[k][0]}</b>${m?mRow(m):empty('Sin próximo partido cargado.')}</div>`};
- return `<div class=hero><h1>${hi()}, ${esc(S.p.name)}</h1><p>${new Date().toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'})}</p><div class=st><div><b>${td.length}</b><small>Eventos hoy</small></div><div><b>${S.tk.filter(x=>!x.done).length}</b><small>Tareas</small></div><div><b>${n}/4</b><small>Gym semanal</small></div></div></div>
- ${focus()}<div class=row style="margin-bottom:12px"><button class=q onclick="editEv(0,today())">Crear evento</button><button class=q onclick="editTk()">Crear tarea</button><button class=q onclick="editRm()">Crear recordatorio</button><button class=q onclick="editLg()">Registrar ejercicio</button><button class=q onclick="go('foot')">Fútbol</button><button class=q onclick="go('rem')">Recordatorios</button></div>
+ return `<div class=hero><h1>${hi()}, ${esc(S.p.name)}</h1><p>${new Date().toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'})}</p><div class=st><div><b>${td.length}</b><small>Eventos hoy</small></div><div><b>${S.rm.filter(x=>x.on!='0'&&!rdone(x)).length}</b><small>Avisos activos</small></div><div><b>${n}/4</b><small>Gym semanal</small></div></div></div>
+ ${focus()}<div class=row style="margin-bottom:12px"><button class=q onclick="editEv(0,today())">Crear evento</button><button class=q onclick="editRm()">Crear recordatorio</button><button class=q onclick="editLg()">Registrar ejercicio</button><button class=q onclick="go('foot')">Fútbol</button><button class=q onclick="go('rem')">Recordatorios</button></div>
  <div class=card><b>Hoy</b>${td.map(evRow).join('')||empty('No tenés eventos hoy.')}</div>
  <div class=card><b>Próximos eventos</b>${up.map(([s,e])=>`<div class=it onclick="editEv('${e.id}')"><i style="background:${cat(e.cat).c}"></i><div><b>${esc(e.title)}</b><small>${fd(s)} · ${e.start}</small></div></div>`).join('')||empty('Nada en los próximos 14 días.')}</div>
- <div class=card><b>Tareas pendientes (${S.tk.filter(x=>!x.done).length})</b>${pt.map(x=>`<div class=it onclick="editTk('${x.id}')"><button class=ck onclick="event.stopPropagation();tgl('${x.id}')"></button><div><b>${esc(x.title)}</b><small>${x.due?fd(x.due):'Sin fecha'}</small></div></div>`).join('')||empty('Sin tareas pendientes.')}</div>
  <div class=card><b>Próximos recordatorios</b>${rr.map(({r,t})=>`<div class=it onclick="editRm('${r.id}')"><div><b>${esc(r.title)}</b><small>${t.toLocaleString('es-AR',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</small></div></div>`).join('')||empty('Sin recordatorios próximos.')}</div>
  <div class=card onclick="go('gym')"><div class="row sp"><b>Gym esta semana</b><b>${n}/4</b></div><div class=bar><i style="width:${Math.min(100,n/4*100)}%"></i></div></div>${mc('boca')}${mc('atu')}`}
 function editP(){const p=S.p;form('Editar perfil',[{n:'name',l:'Nombre',v:p.name,r:1},{n:'age',l:'Edad',t:'number',v:p.age,r:1},{n:'h',l:'Altura (m)',t:'number',s:'0.01',v:p.h},{n:'w',l:'Peso (kg)',t:'number',s:'0.1',v:p.w}],v=>{if(+v.age<1||+v.age>120)return 'Edad inválida';S.p={...v,age:+v.age,h:+v.h,w:+v.w}})}
@@ -529,15 +549,14 @@ function closeQuick(){const M=$('#md');M.classList.remove('on');M.innerHTML=''}
 function quickOpen(kind){
  closeQuick();
  if(kind==='event')editEv(0,today());
- else if(kind==='task')editTk();
  else if(kind==='reminder')editRm();
  else if(kind==='workout')editLg();
  else if(kind==='football')go('foot');
 }
 function render(){
- const views={home,cal,tk,gym,prof,foot,rem};
+ const views={home,cal,gym,prof,foot,rem};
  $('#mn').innerHTML=(views[T]||home)()+'<button class="quick-fab" onclick="quickMenu()" aria-label="Crear nuevo" title="Crear nuevo"><span>＋</span><small>Crear</small></button>';
- const items=[['home',I.home,'Inicio'],['cal',I.cal,'Calendario'],['tk',I.tk,'Tareas'],['rem',I.rem,'Recordatorios'],['gym',I.gym,'Gym'],['foot',I.foot,'Fútbol'],['prof',I.prof,'Perfil']];
+ const items=[['home',I.home,'Inicio'],['cal',I.cal,'Calendario'],['rem',I.rem,'Recordatorios'],['gym',I.gym,'Gym'],['foot',I.foot,'Fútbol'],['prof',I.prof,'Perfil']];
  $('#nv').innerHTML='<div class="nav-brand"><span class="nav-mark">M</span><div><b>MyDay</b><small>PERSONAL MANAGER</small></div></div><div class="nav-links">'+items.map(([k,i,n])=>`<button class="${T==k?'on':''}" ${T==k?'aria-current="page"':''} onclick="go('${k}')"><span class="nav-icon">${i}</span><span class="nav-label">${n}</span></button>`).join('')+'</div><div class="nav-foot"><span>Tu día, bajo control.</span></div>';
 }
 function tick(){const now=Date.now(),t=today(),fire=(id,a,b)=>{if(S.fired[id])return;S.fired[id]=1;save();toast(a+(b?' — '+b:''));try{if(Notification.permission==='granted'&&!window.__mydayPushReady)navigator.serviceWorker.ready.then(reg=>reg.showNotification(a,{body:b||'',icon:'./icon.svg',tag:id})).catch(()=>{})}catch(e){}};
