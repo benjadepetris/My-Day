@@ -731,8 +731,8 @@ function intelAnswer(question){
   const key=ds(d);
   evOn(key).forEach(e=>events.push({type:'event',date:key,time:e.start||'99:99',end:e.end||'',title:e.title,desc:e.desc||'',category:e.cat||''}));
  }
- S.rm.filter(r=>r.on!=='0'&&!rdone(r)).forEach(r=>{
-  for(let d=new Date(from);d<=to;d=add(d,1)){const key=ds(d);if(occ(r,key)){events.push({type:'reminder',date:key,time:r.time||'99:99',end:'',title:r.title,desc:r.desc||''});break}}
+ S.rm.filter(r=>r.on!=='0').forEach(r=>{
+  for(let d=new Date(from);d<=to;d=add(d,1)){const key=ds(d),done=r.rec==='No'?!!r.done:r.dd===key;if(occ(r,key)&&!done){events.push({type:'reminder',date:key,time:r.time||'99:99',end:'',title:r.title,desc:r.desc||''});break}}
  });
  S.mt.filter(m=>['boca','atu'].includes(m.team)&&m.ts>=now.getTime()-72e5).forEach(m=>{
   const key=intelMatchDate(m);if(key>=fromKey&&key<=toKey)events.push({type:'match',date:key,time:new Intl.DateTimeFormat('en-GB',{timeZone:TZ,hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(m.ts)),end:'',title:TM[m.team][0]+' juega',desc:(m.home||'')+' vs '+(m.away||''),team:m.team,ts:m.ts,unknown:!!m.nt});
@@ -744,7 +744,7 @@ function intelAnswer(question){
  events.sort((a,b)=>a.date.localeCompare(b.date)||a.time.localeCompare(b.time));
  const datePrefix=e=>range?intelDateLabel(pd(e.date))+' · ':'';
  const lines=events.map(e=>{
-  const time=e.unknown?'Horario a confirmar':e.time==='99:99'?'Horario no especificado':e.end?e.time+' a '+e.end:e.time+' hs';
+  const time=e.unknown?'Horario a confirmar':e.time==='99:99'?'Horario no especificado':e.end?e.time+' hs a '+e.end+' hs':e.time+' hs';
   const extra=e.type==='match'?' · '+e.desc:e.desc?' · '+e.desc:'';
   const icon=e.type==='match'?'⚽':e.type==='gym'?'🏋️':e.type==='reminder'?'◷':'•';
   return '<div class="intel-chat-event"><span>'+icon+'</span><div><b>'+esc(datePrefix(e)+e.title)+'</b><small>'+esc(time+extra)+'</small></div></div>';
