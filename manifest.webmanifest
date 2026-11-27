@@ -1,0 +1,19 @@
+{
+  "name": "MyDay · Personal Life Manager",
+  "short_name": "MyDay",
+  "lang": "es",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#101a33",
+  "theme_color": "#101a33",
+  "description": "Tu espacio personal para organizar calendario, tareas, entrenamiento y fútbol.",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

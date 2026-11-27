@@ -1,0 +1,12 @@
+name = "myday-push"
+main = "worker.js"
+compatibility_date = "2026-11-26"
+workers_dev = true
+
+[triggers]
+crons = ["* * * * *"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "myday-db"
+database_id = "d5dfe586-ec15-4d89-87c0-b94f1773913a"
