@@ -760,7 +760,7 @@ function intelMatchDate(m){return new Intl.DateTimeFormat('en-CA',{timeZone:TZ,y
 function intelAnswer(question){
  const clean=v=>String(v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
  const raw=String(question||'').trim(),q0=clean(raw).replace(/[¿¡]/g,''),now=new Date(),base=pd(today());
- const isNextFollowup=/^(?:(?:y|y entonces|y despues|despues|que sigue|lo siguiente)\\s*)[?!.]*$/.test(q0)||/^(?:y )?(?:el|la|los|las) siguientes?[?!.]*$/.test(q0);
+ const isNextFollowup=/^(?:(?:y|y entonces|y despues|despues|que sigue|lo siguiente)\s*)[?!.]*$/.test(q0)||/^(?:y )?(?:el|la|los|las) siguientes?[?!.]*$/.test(q0);
  if(!q0)return 'Escribime una consulta y reviso tus datos.';
  let q=q0,topic='',team='',range=false,label='hoy',from=new Date(base),to=new Date(base),explicitDate=false;
  const days=['domingo','lunes','martes','miercoles','jueves','viernes','sabado'];
