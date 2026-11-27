@@ -724,14 +724,17 @@ function intelAnswer(question){
  const raw=String(question||'').trim(),q=raw.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
  const now=new Date(),base=pd(today()),days=['domingo','lunes','martes','miercoles','jueves','viernes','sabado'];
  let from=new Date(base),to=new Date(base),range=false,label='hoy';
- if(/\bmanana\b/.test(q)){from=add(base,1);to=new Date(from);label='mañana'}
- else if(/pasado manana/.test(q)){from=add(base,2);to=new Date(from);label='pasado mañana'}
+ if(/pasado manana/.test(q)){from=add(base,2);to=new Date(from);label='pasado mañana'}
+ else if(/\bmanana\b/.test(q)){from=add(base,1);to=new Date(from);label='mañana'}
  else{
   const idx=days.findIndex(x=>new RegExp('\\b'+x+'\\b').test(q));
   if(idx>=0){let delta=(idx-base.getDay()+7)%7;if(delta===0&&/proximo|que viene/.test(q))delta=7;from=add(base,delta);to=new Date(from);label=days[idx]}
   else if(/esta semana|la semana/.test(q)){from=base;to=add(base,6);range=true;label='esta semana'}
   else if(/proximos 7|siguiente semana/.test(q)){from=base;to=add(base,7);range=true;label='los próximos 7 días'}
  }
+ const dateSpecific=/\b(hoy|manana|pasado manana|lunes|martes|miercoles|jueves|viernes|sabado|domingo)\b|esta semana|proximos 7|siguiente semana/.test(q);
+ if(!dateSpecific&&/proximo evento|que sigue|siguiente compromiso|cuando es mi proximo/.test(q)){from=base;to=add(base,62);range=true;label='los próximos 2 meses'}
+ if(!dateSpecific&&/recordatorio|pendiente|vencid|aviso/.test(q)){from=base;to=add(base,62);range=true;label='los próximos 2 meses'}
  const fk=ds(from),tk=ds(to),all=[];
  for(let d=new Date(from);d<=to;d=add(d,1)){
   const key=ds(d);
