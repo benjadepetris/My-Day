@@ -365,7 +365,11 @@ async function testPush(){
   const {installationId}=await ensurePushSubscription();
   const result=await pushRequest('/test',{installationId});
   if(result.ok)toast('Prueba enviada al servicio de Apple. Cerrá MyDay y comprobá si llega.');
-  else toast('El servidor rechazó la prueba. Revisá los registros del servicio push.');
+  else{
+   const detail=(result.errors||[]).map(e=>'HTTP '+e.status+(e.detail?' · '+e.detail:'')).join(' | ');
+   toast('Apple rechazó el envío: '+(detail||'sin detalle del servidor'));
+   console.error('MyDay push rejection:',result);
+  }
  }catch(err){console.error('MyDay push test:',err);toast('No se pudo registrar o enviar la prueba push: '+(err.message||'error desconocido'))}
 }
 async function perm(){
