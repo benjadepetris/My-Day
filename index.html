@@ -753,12 +753,14 @@ function foot(){
 }
 // INICIO / PERFIL
 let intelChat=[];
+let intelLastAgendaItem=null;
 function intelDateLabel(d){return d.toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'})}
 function intelClock(v){return v?String(v).slice(0,5):''}
 function intelMatchDate(m){return new Intl.DateTimeFormat('en-CA',{timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(m.ts))}
 function intelAnswer(question){
  const clean=v=>String(v||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
  const raw=String(question||'').trim(),q0=clean(raw).replace(/[¿¡]/g,''),now=new Date(),base=pd(today());
+ const isNextFollowup=/^(?:(?:y|y entonces|y despues|despues|que sigue|lo siguiente)\\s*)[?!.]*$/.test(q0)||/^(?:y )?(?:el|la|los|las) siguientes?[?!.]*$/.test(q0);
  if(!q0)return 'Escribime una consulta y reviso tus datos.';
  let q=q0,topic='',team='',range=false,label='hoy',from=new Date(base),to=new Date(base),explicitDate=false;
  const days=['domingo','lunes','martes','miercoles','jueves','viernes','sabado'];
@@ -870,7 +872,17 @@ function intelAnswer(question){
   if(/solo eventos|eventos/.test(q)&&!asksRem)selected=all.filter(e=>e.type==='event');
   if(/partidos/.test(q))selected=all.filter(e=>e.type==='match');
   if(asksCount)return '<p>En '+label+' hay <b>'+selected.length+' elemento'+(selected.length===1?'':'s')+'</b> entre los datos consultados.</p>'+(selected.length?agenda(selected,'Detalle:'):'');
-  if(asksNext){const next=all.filter(e=>future(e)&&e.type!=='reminder')[0];return next?'<p>Lo próximo que tenés es:</p>'+agenda([next],''):'No encuentro próximos eventos o partidos cargados.'}
+  if(asksNext){
+   const upcoming=all.filter(e=>future(e)&&e.type!=='reminder');
+   let next=null;
+   if(isNextFollowup&&intelLastAgendaItem){
+    const lastIndex=upcoming.findIndex(e=>e.date===intelLastAgendaItem.date&&e.type===intelLastAgendaItem.type&&e.title===intelLastAgendaItem.title&&e.time===intelLastAgendaItem.time);
+    next=lastIndex>=0?upcoming[lastIndex+1]||null:upcoming[0]||null;
+   }else next=upcoming[0]||null;
+   if(!next){if(!upcoming.length)return 'No encuentro próximos eventos o partidos cargados.';return 'No encuentro otro evento posterior en los datos que tengo cargados.'}
+   intelLastAgendaItem={date:next.date,type:next.type,title:next.title,time:next.time||'',id:next.id||null};
+   return '<p>'+(isNextFollowup?'Después de eso, lo siguiente es:':'Lo próximo que tenés es:')+'</p>'+agenda([next],'');
+  }
   if(selected.length){const upcoming=selected.filter(future).length;return agenda(selected,(range?'Para '+label+' encontré ':'En '+label+' tenés ')+selected.length+' elemento'+(selected.length===1?'':'s')+'.')+'<p>'+(upcoming?'Todavía tenés '+upcoming+' por delante según los horarios guardados.':'No quedan más elementos futuros en este período.')+'</p>'}
   return 'No encuentro eventos ni recordatorios cargados para '+label+'. No voy a inventarte actividades: podés revisar Calendario y Recordatorios.';
  }
