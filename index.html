@@ -789,7 +789,9 @@ function intelAnswer(question){
  else if(/hoy|manana|pasado manana|esta semana|proxima semana|proximos|fin de semana|finde|\b(lunes|martes|miercoles|jueves|viernes|sabado|domingo)\b/.test(q))topic='agenda';
  else topic='lookup';
  // Fechas relativas, rangos semanales, meses y fechas escritas.
- if(/pasado manana/.test(q)){from=add(base,2);to=new Date(from);label='pasado mañana';explicitDate=true}
+ if(/anteayer/.test(q)){from=add(base,-2);to=new Date(from);label='anteayer';explicitDate=true}
+ else if(/ayer/.test(q)){from=add(base,-1);to=new Date(from);label='ayer';explicitDate=true}
+ else if(/pasado manana/.test(q)){from=add(base,2);to=new Date(from);label='pasado mañana';explicitDate=true}
  else if(/\bmanana\b/.test(q)){from=add(base,1);to=new Date(from);label='mañana';explicitDate=true}
  else if(/\bhoy\b/.test(q)){explicitDate=true}
  else{
