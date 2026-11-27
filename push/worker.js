@@ -88,7 +88,10 @@ async function sendWebPush(subscription,payload,env){
 async function handleRequest(request,env){
   if(request.method==="OPTIONS")return new Response(null,{headers:cors});
   const url=new URL(request.url);
-  if(request.method==="GET"&&(url.pathname==="/"||url.pathname==="/health"))return json({ok:true,service:"MyDay Push"});
+  if(request.method==="GET"&&(url.pathname==="/"||url.pathname==="/health")){
+    try{const keys=await getVapidKeys(env);return json({ok:true,service:"MyDay Push",publicKey:keys.publicKey})}
+    catch(error){return json({ok:false,error:String(error?.message||error)},500)}
+  }
   if(request.method!=="POST")return json({error:"Method not allowed"},405);
   let data;try{data=await request.json()}catch(_){return json({error:"Invalid JSON"},400)}
   const installationId=String(data.installationId||"");
