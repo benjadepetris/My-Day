@@ -220,7 +220,12 @@ async function ensurePushSubscription(){
  const reg=await navigator.serviceWorker.register('./sw.js');
  await navigator.serviceWorker.ready;
  let sub=await reg.pushManager.getSubscription();
+ const keyMarker='myday.push.vapid.publicKey';
+ const previousKey=localStorage.getItem(keyMarker);
+ // If the VAPID key changed, the old browser subscription is no longer valid.
+ if(sub&&previousKey!==cfg.publicKey){await sub.unsubscribe();sub=null;}
  if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(cfg.publicKey)});
+ localStorage.setItem(keyMarker,cfg.publicKey);
  const installationId=getPushInstallationId();
  await pushRequest('/subscribe',{installationId,subscription:sub.toJSON()});
  window.__mydayPushReady=true;
